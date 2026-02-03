@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.Networking;
+using System;
 using System.Collections;
 
 public class RESTAPITEST : MonoBehaviour
@@ -9,7 +10,7 @@ public class RESTAPITEST : MonoBehaviour
     {
         UnityWebRequest request = UnityWebRequest.Get("https://jsonplaceholder.typicode.com/todos/1");
         StartCoroutine(SendRequest(request));
-        
+        WebCamTexture webcamTexture = new WebCamTexture();
     }
 
     // Update is called once per frame
