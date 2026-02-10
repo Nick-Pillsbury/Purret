@@ -2,22 +2,24 @@
 # **HARDWARE DOCUMENTATION**
 
 
-# Yahboom 2-DOF Servo Pan-Tilt Kit for DIY Robot
+## Yahboom 2-DOF Servo Pan-Tilt Kit for DIY Robot
 * Contents:
   * Contains 2 different servos with different degrees of motion
   * aluminum alloy bracket
 
 
-## Servo 270
+### Servo 270°
 * 20kg metal servo
-* 0-270 degrees of motion
+* 0°-270° degrees of motion
 * requires 6-7.4 V  otherwise abnormal driving caused
+* Top Servo of the chassis
 
 
-## Servo 180
+### Servo 180°
 * 25kg metal servo
-* 0-180 degrees of motion
+* 0°-180° degrees of motion
 * unknown requirement of voltages
+* Bottom Servo of the chassis
 
 Pulses are used to determine the servo rotation angle:
 
@@ -27,21 +29,34 @@ Pulses are used to determine the servo rotation angle:
 2.0ms--------------------135°
 2.5ms--------------------180°
 
-## Voltages
+### Voltages
 
 The original plan was to utilize a 5 volt cable to power the entire apparatus. However atleast one of the servos used requires a higher range of voltage. As a result I have chosen a new power supply for us to utilize that will allow us to control the voltage for our desired output and motor function.
 
-# Servo Driver Module
+## Laser Guidance System
+Attached to the 270
+
+## Video camera
+# TODO:
+* add information about the laser + camera modules
+
+
+## Servo Driver Module
 
 *  PCA9685 model
    * 16 channels
-	 * 12-Bit
+	* 12-Bit
+  * Allows for both servo's to be controlled by the 
 
+**Pin Layout:**
+![alt text](driver.png)
+---
 # Raspberry Pi connection to board 
 ---
 * a raspberry pi will be used to control the machine via c++ code via custom made API
 
 * Servo Motors will be connected to PCA9685 driver module(s) that is controlled by the Pi
+
 
 ## Notes on wiring the PI
 
@@ -53,6 +68,10 @@ Details involve both servo & pi connection w/out driver from company github:
 * Yellow wire (signal wire) of the servo to the physical pin of the Raspberry Pi motherboard (PIN 33) _Refer to Raspberry PI pin diagrams to find the correct pin/ get other info_
   * Also connect gnd connections of motherboard to negative pole of the battery _(Power supply)_
 
+
+Now instead of using the PI directly, we will be connecting both servos to the PCA9685 driver which will be connected to the PI. The Laser module will likely be connected to the driver aswell to better manage power controls. The camera (unknown model at current time) will be connected directly to the Pi to directly interface with the API.
+
+- Will update once physical parts received & exact camera and laser module selected.
 
 Hardware links:
 
