@@ -70,12 +70,51 @@ The 64-bit version allows full utilization of the Raspberry Pi 5’s 8GB of RAM.
 
 ---
 
+## Used Software
+
+### UFW Firewall
+A simple firewall to block uunwanted traffic.
+```bash
+sudo apt install ufw -y
+sudo ufw allow 22/tcp        # SSH
+sudo ufw allow 51820/udp     # WireGuard
+sudo ufw enable
+```
+
+### Htop
+For CPU / Ram Monitoring
+```bash
+sudo apt install htop -y
+```
+
+### Curl
+```bash
+sudo apt install curl -y
+```
+
+### Docker
+```bash
+curl -fsSL https://get.docker.com | sh
+sudo usermod -aG docker $USER
+sudo apt install docker-compose-plugin -y
+sudo reboot
+docker run hello-world
+```
+
+### WireGuard
+```bash
+sudo apt install wireguard -y
+```
+
+
+---
+
 ## Tunnel Choice
 WireGuard is used to create a secure, VPN tunnel between the Raspberry Pi / local network and the outside internet. This enables encrypted remote access, secure data transmission, and safe management of the device from external networks. It will allow to connect to the pi from anywhere, while opening the local network to the internet securely.
 
 ---
 
-## Manual Wireguard Setup
+## Wireguard Install and Setup
 
 ### Server Setup
 
@@ -86,7 +125,6 @@ WireGuard is used to create a secure, VPN tunnel between the Raspberry Pi / loca
       net.ipv4.ip_forward=1
    sudo sysctl -p
    ```
-
 2. Enable Internet Routing
    ***Use wlan0 for Wifi and eth0 for Lan***
    ```bash
@@ -94,15 +132,7 @@ WireGuard is used to create a secure, VPN tunnel between the Raspberry Pi / loca
    sudo iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
    sudo netfilter-persistent save
    ```
-3. Install Wireguard
-   ```bash
-   sudo apt install wireguard -y
-   ```
-4. Verify Install
-   ```bash
-   wg --version
-   ```
-5. Create Mutiple Pairs of Private and Public Keys
+3. Create Mutiple Pairs of Private and Public Keys
    ```bash
    cd ~
    mkdir keys
@@ -112,7 +142,7 @@ WireGuard is used to create a secure, VPN tunnel between the Raspberry Pi / loca
       wg genkey | tee -a client_privatekeys.txt | wg pubkey >> client_publickeys.txt
    done
    ```
-6. Create Wireguard Config File
+4. Create Wireguard Config File
    ```bash
    sudo nano /etc/wireguard/wg0.conf
    sudo chmod 600 /etc/wireguard/wg0.conf
@@ -122,6 +152,9 @@ WireGuard is used to create a secure, VPN tunnel between the Raspberry Pi / loca
    PrivateKey = <SERVER_PRIVATE_KEY>
    Address = 10.0.0.1/24
    ListenPort = 51820
+
+   PostUp = iptables -A FORWARD -i wg0 -j ACCEPT; iptables -A FORWARD -o wg0 -j ACCEPT; iptables -t nat -A POSTROUTING -o wlan0 -j MASQUERADE
+   PostDown = iptables -D FORWARD -i wg0 -j ACCEPT; iptables -D FORWARD -o wg0 -j ACCEPT; iptables -t nat -D POSTROUTING -o wlan0 -j MASQUERADE
 
    # Client 1
    [Peer]
@@ -148,7 +181,7 @@ WireGuard is used to create a secure, VPN tunnel between the Raspberry Pi / loca
    PublicKey = <CLIENT5_PUBLIC_KEY>
    AllowedIPs = 10.0.0.6/32
    ```
-7. Port Forward on Router
+5. Port Forward on Router
    **On your router port forward a free port to your pi <LOCAL_IP:WG_LISTENING_PORT>**
    This will allow clients to connect to your <PUBLIC_IP>:<ROUTER_PORT> and be forwarded to the wireguard server.
 
@@ -165,8 +198,6 @@ Endpoint = <YOUR_PUBLIC_IP>:<ROUTER_PORT>
 AllowedIPs = 10.0.0.0/24, 192.168.1.0/24
 PersistentKeepalive = 25
 ```
-
-
 
 ### Wireguards Commands
    > Start Tunnel
@@ -192,4 +223,40 @@ PersistentKeepalive = 25
 
 ---
 
+## Docker Commands
+   > Container Controls
+   >``` 
+   >docker start <container>
+   >docker stop <container>
+   >docker restart <container>
+   >docker rm <container>
+   >docker logs <container>
+   >docker exec -it <container> bash
+   >```
+   >
+   > List containers
+   > ```
+   >docker ps
+   >```
+   >
+   > Persistant Storage
+   > ```
+   >docker volume ls
+   >docker volume create mydata
+   >docker volume rm mydata
+   >```
+   >
+   > Compose
+   > ```
+   >docker compose up -d
+   >docker compose down
+   >docker compose restart
+   >docker compose logs -f
+   >```
+
+
+---
+
 ## Installation Scripts
+
+Flash the Os with a hostname, wifi access, shh access, and a user / password. Then the installion script will auto download all dependecies for this project and setup wireguard tunnel.
