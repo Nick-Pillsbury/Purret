@@ -125,14 +125,7 @@ WireGuard is used to create a secure, VPN tunnel between the Raspberry Pi / loca
       net.ipv4.ip_forward=1
    sudo sysctl -p
    ```
-2. Enable Internet Routing
-   ***Use wlan0 for Wifi and eth0 for Lan***
-   ```bash
-   sudo apt install iptables-persistent -y
-   sudo iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
-   sudo netfilter-persistent save
-   ```
-3. Create Mutiple Pairs of Private and Public Keys
+2. Create Mutiple Pairs of Private and Public Keys
    ```bash
    cd ~
    mkdir keys
@@ -142,7 +135,7 @@ WireGuard is used to create a secure, VPN tunnel between the Raspberry Pi / loca
       wg genkey | tee -a client_privatekeys.txt | wg pubkey >> client_publickeys.txt
    done
    ```
-4. Create Wireguard Config File
+3. Create Wireguard Config File
    ```bash
    sudo nano /etc/wireguard/wg0.conf
    sudo chmod 600 /etc/wireguard/wg0.conf
@@ -181,7 +174,7 @@ WireGuard is used to create a secure, VPN tunnel between the Raspberry Pi / loca
    PublicKey = <CLIENT5_PUBLIC_KEY>
    AllowedIPs = 10.0.0.6/32
    ```
-5. Port Forward on Router
+4. Port Forward on Router
    **On your router port forward a free port to your pi <LOCAL_IP:WG_LISTENING_PORT>**
    This will allow clients to connect to your <PUBLIC_IP>:<ROUTER_PORT> and be forwarded to the wireguard server.
 
@@ -258,5 +251,8 @@ PersistentKeepalive = 25
 ---
 
 ## Installation Scripts
-
 Flash the Os with a hostname, wifi access, shh access, and a user / password. Then the installion script will auto download all dependecies for this project and setup wireguard tunnel.
+```bash
+chmod +x setup.sh
+./setup.sh
+```
