@@ -82,3 +82,22 @@ company github page:https://github.com/YahboomTechnology/2DOF-PTZ
 
 Driver link:
 https://www.amazon.com/HiLetgo-PCA9685-Channel-12-Bit-Arduino/dp/B07BRS249H/142-4472007-8474650?pd_rd_w=X2d8i&content-id=amzn1.sym.9bef5913-5870-4504-8883-3ba89d7f8e39&pf_rd_p=9bef5913-5870-4504-8883-3ba89d7f8e39&pf_rd_r=8C1Z7T0C2Z2YJHAET4G1&pd_rd_wg=Or3Sj&pd_rd_r=b6a01385-5874-4ce5-a261-6d09b9b0bd0e&pd_rd_i=B07BRS249H&psc=1
+
+
+
+
+# 2/20/26 Construction Begins
+The main kit construction begin, letting us discover multiple areas that we needed to do more research on before continuing.
+
+[alt text](image.png)
+
+![alt text](image-1.png)
+
+![alt text](image-2.png)
+
+Construction tutorial:
+https://www.youtube.com/watch?v=CBgL3jvkomg 
+
+
+Pi connecting to control board tutorial
+https://www.youtube.com/watch?v=GwpSpOwvx9Y
