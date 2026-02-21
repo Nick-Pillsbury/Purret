@@ -216,40 +216,6 @@ PersistentKeepalive = 25
 
 ---
 
-## Docker Commands
-   > Container Controls
-   >``` 
-   >docker start <container>
-   >docker stop <container>
-   >docker restart <container>
-   >docker rm <container>
-   >docker logs <container>
-   >docker exec -it <container> bash
-   >```
-   >
-   > List containers
-   > ```
-   >docker ps
-   >```
-   >
-   > Persistant Storage
-   > ```
-   >docker volume ls
-   >docker volume create mydata
-   >docker volume rm mydata
-   >```
-   >
-   > Compose
-   > ```
-   >docker compose up -d
-   >docker compose down
-   >docker compose restart
-   >docker compose logs -f
-   >```
-
-
----
-
 ## Installation Scripts
 Flash the Os with a hostname, wifi access, shh access, and a user / password. Then the installion script will auto download all dependecies for this project and setup wireguard tunnel.
 ```bash
