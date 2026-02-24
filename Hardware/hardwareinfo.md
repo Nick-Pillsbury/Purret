@@ -73,8 +73,33 @@ Now instead of using the PI directly, we will be connecting both servos to the P
 
 - Will update once physical parts received & exact camera and laser module selected.
 
+
+# Process for wiring our system:
+1. Plug the 4 Pins from the driver module to the Raspberry PI
+* Pins:
+  * Driver-----PI
+  * Pin V+-----Pin 1
+  * Pin GND----Pin 6
+  * Pin SDA----Pin 3
+  * Pin SCL----Pin 5
+
+2.  Connect the Servo Motors to the Driver Module (Matching Colors w/ the board)
+
+3. Connect power to the Driver Module of 5V via external power module - (V+ side is Red)
+
+4. SSH into the Pi via network. - Test code on motors!
+
+## Laser Module:
+1. Current plan is to wire it to PIN 7, plan may change when part is received.
+
+## Camera Module - Wired into the Pi via USB
 Hardware links:
 
+
+# Main work left
+  *  Wire final model
+  *  Fully attach all other pieces to chassis
+  * Code the require manuevers and set up a control system, 
 Servo + Chasis link:https://www.amazon.com/Yahboom-Pan-Tilt-Electric-Platform-Accessories/dp/B0BRXVFCKX?crid=1KUA94PMKSRNO&dib=eyJ2IjoiMSJ9.4eRj_T_iKB1iEngaI6jnfJyJxbKsjoufnNVZFRyi1wvmFuLVeCjG1crIbCtV4qV_Y2q2idksGWQ4dGIFJAHrKKJs3T0r20CkxQ1MvpJ3eno9QmKXwtYMGmKZ60oL7nEpoNH9ie2h_mca1alu6guQEtnNRdajE8VjiVAnYdO9Pc6l2AlqHIIH8AG4n6YPl8J5mSiWRtZAtzuNcqBhQAh63FD5L5aFAt3igRSxgD0a9q8.bxeCgEPO_uW3jdD5FFCNyGg5er72vM_CAFR3qP1aQDM&dib_tag=se&keywords=pan+and+tilt+servo+kit+pi5&qid=1769168785&sprefix=pan+and+tilt+servo+kit+pi5%2Caps%2C189&sr=8-1 
 
 company github page:https://github.com/YahboomTechnology/2DOF-PTZ 
@@ -83,9 +108,10 @@ company github page:https://github.com/YahboomTechnology/2DOF-PTZ
 Driver link:
 https://www.amazon.com/HiLetgo-PCA9685-Channel-12-Bit-Arduino/dp/B07BRS249H/142-4472007-8474650?pd_rd_w=X2d8i&content-id=amzn1.sym.9bef5913-5870-4504-8883-3ba89d7f8e39&pf_rd_p=9bef5913-5870-4504-8883-3ba89d7f8e39&pf_rd_r=8C1Z7T0C2Z2YJHAET4G1&pd_rd_wg=Or3Sj&pd_rd_r=b6a01385-5874-4ce5-a261-6d09b9b0bd0e&pd_rd_i=B07BRS249H&psc=1
 
+Laser Module:
+https://www.amazon.com/HiLetgo-10pcs-650nm-Diode-Laser/dp/B071FT9HSV?crid=3EBY3IMYJVOVN&dib=eyJ2IjoiMSJ9.oI2MaUtq_e6bIAN-stQQ6JO_VKR6chl-G5394oVPF06a9x8UqFersCdfrCn5CMjPGoX0sN27OzGHciY85GsXGo7XGi5vvzTLHXo_irEgkTtF8QhT15cA40dsPdsulSgMXzLD9mVPw5VL1hOr4jmgwB8e3Hai9bKeuZ_c_hKXHyAodgVNWtOm4GaNvGilLQmGHQ2yPChq_ibw2prfUdCJKa6RjuoV6nsUC1QvJRs0IGY.k8CU2IdL8OCfufmnwDlcXOX_B00yVeSP5JR06AAyxvM&dib_tag=se&keywords=5v+laser+diode&qid=1771970941&sprefix=5v+laser+diode%2Caps%2C115&sr=8-1-spons&sp_csd=d2lkZ2V0TmFtZT1zcF9hdGY&psc=1 
 
-
-
+    
 # 2/20/26 Construction Begins
 The main kit construction begin, letting us discover multiple areas that we needed to do more research on before continuing.
 
