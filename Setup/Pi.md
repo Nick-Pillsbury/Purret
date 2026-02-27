@@ -106,6 +106,10 @@ docker run hello-world
 sudo apt install wireguard -y
 ```
 
+### I2C
+```bash
+sudo apt install i2c-tools libi2c-dev -y
+```
 
 ---
 
@@ -216,43 +220,31 @@ PersistentKeepalive = 25
 
 ---
 
-## Docker Commands
-   > Container Controls
-   >``` 
-   >docker start <container>
-   >docker stop <container>
-   >docker restart <container>
-   >docker rm <container>
-   >docker logs <container>
-   >docker exec -it <container> bash
-   >```
-   >
-   > List containers
-   > ```
-   >docker ps
-   >```
-   >
-   > Persistant Storage
-   > ```
-   >docker volume ls
-   >docker volume create mydata
-   >docker volume rm mydata
-   >```
-   >
-   > Compose
-   > ```
-   >docker compose up -d
-   >docker compose down
-   >docker compose restart
-   >docker compose logs -f
-   >```
-
-
----
-
-## Installation Scripts
+## Installation Script
 Flash the Os with a hostname, wifi access, shh access, and a user / password. Then the installion script will auto download all dependecies for this project and setup wireguard tunnel.
 ```bash
 chmod +x setup.sh
 ./setup.sh
+```
+
+---
+
+## I^2C Enable
+```bash
+sudo raspi-config
+Interface Options → I2C → Enable
+sudo reboot
+```
+
+
+## PCA Driver Board Frequency
+Make sure to setup the wiring before. You can check that the PCA board is connected with:
+```bash
+i2cdetect -y 1
+```
+We need to set the pwm freqency within the board from whatever the default is to 50hz. 
+```bash
+sudo i2cset -y 1 0x40 0x00 0x10
+sudo i2cset -y 1 0x40 0xFE 0x79
+sudo i2cset -y 1 0x40 0x00 0x20
 ```
