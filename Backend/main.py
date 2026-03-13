@@ -1,125 +1,220 @@
-from fastapi import FastAPI, HTTPException, Depends
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from __future__ import annotations
+
 import uuid
-import asyncio
-from typing import Dict
-from datetime import datetime
+from typing import Any, Dict, Literal, Optional
 
-from state_machine import StateMachine, SystemState
-from models import ServoCommand, LaserCommand, VideoCommand, LoginRequest
+from fastapi import Depends, FastAPI, HTTPException
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from pydantic import BaseModel, Field
 
-app = FastAPI(title="Purret Control API")
+app = FastAPI(title="Purret Control API (Skeleton)")
+
+#
+# NOTE
+# This file is intentionally a minimal skeleton that mirrors `endpoints.md`.
+# Every endpoint is `async def` and returns placeholder JSON so you can fill in
+# real Docker/hardware commands later.
+#
 
 
-# Global System Components
-state_machine = StateMachine()
-active_sessions: Dict[str, str] = {}  # token -> username
-event_log = []
-telemetry_data = {
-    "servo_angle": 0,
-    "laser_enabled": False,
-    "recording": False,
-    "temperature": 30.0,
-    "battery": 95
-}
-
+# --- Minimal auth: single-user lock (only one username logged in at a time) ---
 security = HTTPBearer()
+active_token: str | None = None
 
 
-# Utilities
-def log_event(message: str):
-    event_log.append({
-        "timestamp": datetime.utcnow().isoformat(),
-        "message": message
-    })
-
-def verify_session(credentials: HTTPAuthorizationCredentials = Depends(security)):
+def require_session(credentials: HTTPAuthorizationCredentials = Depends(security)) -> str:
     token = credentials.credentials
-    if token not in active_sessions:
+    if active_token is None or token != active_token:
         raise HTTPException(status_code=403, detail="Invalid or expired session")
-    return active_sessions[token]
+    return token
 
 
-# Authentication (Single User Enforcement)
 @app.post("/login")
-async def login(request: LoginRequest):
-    if state_machine.current_user:
+async def login():
+    global active_token
+    if active_token is not None:
         raise HTTPException(status_code=403, detail="System already in use")
-
     token = str(uuid.uuid4())
-    active_sessions[token] = request.username
-    state_machine.current_user = request.username
-
-    log_event(f"{request.username} logged in")
+    active_token = token
     return {"token": token}
 
 
 @app.post("/logout")
-async def logout(user: str = Depends(verify_session)):
-    token = [k for k, v in active_sessions.items() if v == user][0]
-    del active_sessions[token]
-    state_machine.current_user = None
-    state_machine.state = SystemState.IDLE
-
-    log_event(f"{user} logged out")
-    return {"message": "Logged out successfully"}
+async def logout(_: str = Depends(require_session)):
+    global active_token
+    active_token = None
+    return {"ok": True}
 
 
-# Control Endpoints
-@app.post("/servo")
-async def control_servo(cmd: ServoCommand, user: str = Depends(verify_session)):
-    if state_machine.state == SystemState.ERROR:
-        raise HTTPException(status_code=400, detail="System in ERROR state")
+# --- Shared request models used across multiple endpoint groups ---
+Direction = Literal["up", "down", "left", "right"]
 
-    telemetry_data["servo_angle"] = cmd.angle
-    state_machine.transition(SystemState.ACTIVE)
 
-    log_event(f"{user} set servo to {cmd.angle} degrees")
+class ServoMoveRequest(BaseModel):
+    direction: Direction
+    step: int = Field(default=5, ge=1, le=30)
 
-    await asyncio.sleep(0.2)  # Simulate hardware I/O
 
-    return {"status": "Servo moved", "angle": cmd.angle}
+class ErrorReport(BaseModel):
+    source: str = Field(default="unknown", min_length=1, max_length=64)
+    message: str = Field(min_length=1, max_length=512)
+    severity: Literal["info", "warning", "error"] = "error"
+    details: Optional[Dict[str, Any]] = None
 
-@app.post("/laser")
-async def control_laser(cmd: LaserCommand, user: str = Depends(verify_session)):
-    telemetry_data["laser_enabled"] = cmd.enabled
-    state_machine.transition(SystemState.ACTIVE)
 
-    log_event(f"{user} turned laser {'ON' if cmd.enabled else 'OFF'}")
+class ContainerOptions(BaseModel):
+    options: Dict[str, Any] = Field(default_factory=dict)
 
-    return {"laser_enabled": cmd.enabled}
 
-@app.post("/video")
-async def control_video(cmd: VideoCommand, user: str = Depends(verify_session)):
-    if cmd.action == "start":
-        telemetry_data["recording"] = True
-        state_machine.transition(SystemState.RECORDING)
-        log_event(f"{user} started recording")
-    elif cmd.action == "stop":
-        telemetry_data["recording"] = False
-        state_machine.transition(SystemState.ACTIVE)
-        log_event(f"{user} stopped recording")
-    else:
-        raise HTTPException(status_code=400, detail="Invalid action")
+# =============================================================================
+# 1) Front to Master (HTTP)
+# - Servo Movement (Up, Down, Left, Right)
+# - Camera
+# - Laser
+# - Power on/off
+# - Starting/Stopping containers
+# - Passing up errors
+# - (record user id and only allow user) -> enforced via require_session
+# =============================================================================
 
-    return {"recording": telemetry_data["recording"]}
 
-@app.get("/telemetry")
-async def get_telemetry(user: str = Depends(verify_session)):
-    # Simulate changing telemetry
-    telemetry_data["temperature"] += 0.1
-    telemetry_data["battery"] -= 0.05
+@app.post("/front/servo/move")
+async def front_servo_move(body: ServoMoveRequest, _: str = Depends(require_session)):
+    return {"ok": True, "todo": "send servo move to master/servo service", "body": body.model_dump()}
 
-    return telemetry_data
 
-@app.get("/logs")
-async def get_logs(user: str = Depends(verify_session)):
-    return {"events": event_log}
+@app.post("/front/camera/start")
+async def front_camera_start(_: str = Depends(require_session)):
+    return {"ok": True, "todo": "tell master to start camera"}
+
+
+@app.post("/front/camera/stop")
+async def front_camera_stop(_: str = Depends(require_session)):
+    return {"ok": True, "todo": "tell master to stop camera"}
+
+
+@app.post("/front/camera/record/start")
+async def front_camera_record_start(_: str = Depends(require_session)):
+    return {"ok": True, "todo": "tell master/camera to start recording"}
+
+
+@app.post("/front/camera/record/stop")
+async def front_camera_record_stop(_: str = Depends(require_session)):
+    return {"ok": True, "todo": "tell master/camera to stop recording"}
+
+
+@app.get("/front/camera/health")
+async def front_camera_health(_: str = Depends(require_session)):
+    return {"ok": True, "todo": "proxy camera health check"}
+
+
+@app.post("/front/laser/on")
+async def front_laser_on(_: str = Depends(require_session)):
+    return {"ok": True, "todo": "turn laser on"}
+
+
+@app.post("/front/laser/off")
+async def front_laser_off(_: str = Depends(require_session)):
+    return {"ok": True, "todo": "turn laser off"}
+
+
+@app.post("/front/power/on")
+async def front_power_on(_: str = Depends(require_session)):
+    return {"ok": True, "todo": "power on system"}
+
+
+@app.post("/front/power/off")
+async def front_power_off(_: str = Depends(require_session)):
+    return {"ok": True, "todo": "power off system"}
+
+
+@app.post("/front/containers/{name}/start")
+async def front_container_start(
+    name: str, body: ContainerOptions | None = None, _: str = Depends(require_session)
+):
+    return {"ok": True, "todo": "start docker container", "name": name, "options": (body.options if body else {})}
+
+
+@app.post("/front/containers/{name}/stop")
+async def front_container_stop(
+    name: str, body: ContainerOptions | None = None, _: str = Depends(require_session)
+):
+    return {"ok": True, "todo": "stop docker container", "name": name, "options": (body.options if body else {})}
+
+
+@app.post("/front/containers/{name}/restart")
+async def front_container_restart(
+    name: str, body: ContainerOptions | None = None, _: str = Depends(require_session)
+):
+    return {"ok": True, "todo": "restart docker container", "name": name, "options": (body.options if body else {})}
+
+
+@app.post("/front/errors")
+async def front_report_error(body: ErrorReport, _: str = Depends(require_session)):
+    return {"ok": True, "todo": "persist/forward errors", "error": body.model_dump()}
+
+
+# =============================================================================
+# 2) Master to Camera
+# - start/stop
+# - record
+# - health check request
+# =============================================================================
+
+
+@app.post("/camera/start")
+async def camera_start(_: str = Depends(require_session)):
+    return {"ok": True, "todo": "master->camera start"}
+
+
+@app.post("/camera/stop")
+async def camera_stop(_: str = Depends(require_session)):
+    return {"ok": True, "todo": "master->camera stop"}
+
+
+@app.post("/camera/record/start")
+async def camera_record_start(_: str = Depends(require_session)):
+    return {"ok": True, "todo": "master->camera record start"}
+
+
+@app.post("/camera/record/stop")
+async def camera_record_stop(_: str = Depends(require_session)):
+    return {"ok": True, "todo": "master->camera record stop"}
+
+
+@app.get("/camera/health")
+async def camera_health(_: str = Depends(require_session)):
+    return {"ok": True, "todo": "master->camera health check"}
+
+
+# =============================================================================
+# 3) Master to Servo
+# - movement
+# - start/stop
+# - health check
+# =============================================================================
+
+
+@app.post("/servo/start")
+async def servo_start(_: str = Depends(require_session)):
+    return {"ok": True, "todo": "master->servo start"}
+
+
+@app.post("/servo/stop")
+async def servo_stop(_: str = Depends(require_session)):
+    return {"ok": True, "todo": "master->servo stop"}
+
+
+@app.post("/servo/move")
+async def servo_move(body: ServoMoveRequest, _: str = Depends(require_session)):
+    return {"ok": True, "todo": "master->servo movement", "body": body.model_dump()}
+
+
+@app.get("/servo/health")
+async def servo_health(_: str = Depends(require_session)):
+    return {"ok": True, "todo": "master->servo health check"}
+
 
 @app.get("/system-status")
 async def system_status():
-    return {
-        "state": state_machine.state,
-        "current_user": state_machine.current_user,
-        "active_sessions": len(active_sessions)
-    }
+    return {"session_active": active_token is not None}
