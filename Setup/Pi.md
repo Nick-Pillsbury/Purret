@@ -215,18 +215,6 @@ PersistentKeepalive = 25
    > Show Interface Details
    > ```ip a show wg0```
 
----
-
-
-## Set Static IP
-Force your server to use x local ip. Wifi is already set up, so it will reuse everything else.
-```bash
-nmcli connection show
-
-sudo nmcli connection modify "WiFi Name" \
-ipv4.addresses X \
-ipv4.method manual
-```
 
 ---
 
@@ -258,4 +246,17 @@ We need to set the pwm freqency within the board from whatever the default is to
 sudo i2cset -y 1 0x40 0x00 0x10
 sudo i2cset -y 1 0x40 0xFE 0x79
 sudo i2cset -y 1 0x40 0x00 0x20
+```
+
+---
+
+## Manually Set IP
+Force your server to use x local ip. Wifi is already set up, so it will reuse everything else.
+Do Not manually set it if you are fixing an ip to this server on router. One or other.
+```bash
+nmcli connection show
+
+sudo nmcli connection modify "WiFi Name" \
+ipv4.addresses X \
+ipv4.method manual
 ```
