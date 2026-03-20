@@ -9,6 +9,7 @@ sudo apt update && sudo apt upgrade -y
 echo "Installing tools"
 sudo apt install -y curl htop ufw wireguard
 sudo apt update && sudo apt upgrade -y
+sudo apt install i2c-tools -y
 
 
 echo "Installing Docker"
@@ -196,11 +197,6 @@ PersistentKeepalive = 25
 EOF
 
 echo "Client configs created in ~/client-configs/"
-
-
-# Static IP
-sudo nmcli connection modify "netplan-wlan0-AXPN" ipv4.addresses 192.168.1.245/24 ipv4.method manual
-
 
 echo "Done! rebooting!"
 sudo reboot
