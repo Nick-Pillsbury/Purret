@@ -28,7 +28,7 @@ public class TitleManagerScript : MonoBehaviour
 
     IEnumerator SendRequest(string username)
     {
-        UnityWebRequest www = UnityWebRequest.Post("https://10.0.0.1:8000/login", "{ \"token\": \"" + username + "\" }", "application/json");
+        UnityWebRequest www = UnityWebRequest.Post("http://10.0.0.1:8000/login", "{ \"token\": \"" + username + "\" }", "application/json");
         yield return www.SendWebRequest();
 
         if (www.result != UnityWebRequest.Result.Success)
