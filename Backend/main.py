@@ -1,13 +1,21 @@
 from __future__ import annotations
 
+import os
 import uuid
-from typing import Any, Dict, Literal, Optional
+from contextlib import asynccontextmanager
+from typing import Dict, Literal, Optional
 
 from fastapi import Depends, FastAPI, HTTPException
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import BaseModel, Field
 
-app = FastAPI(title="Purret Control API (Skeleton)")
+from wireguard_access import configure_wireguard_allowlist, require_wireguard_or_raise
+
+
+@asynccontextmanager
+async def lifespan(_: FastAPI):
+    require_wireguard_or_raise()
+    yield
 
 #
 # NOTE
@@ -15,6 +23,9 @@ app = FastAPI(title="Purret Control API (Skeleton)")
 # Every endpoint is `async def` and returns placeholder JSON so you can fill in
 # real Docker/hardware commands later.
 #
+
+app = FastAPI(title="Purret Control API (Skeleton)", lifespan=lifespan)
+configure_wireguard_allowlist(app)
 
 
 # --- Minimal auth: single-user lock (only one username logged in at a time) ---
@@ -218,3 +229,11 @@ async def servo_health(_: str = Depends(require_session)):
 @app.get("/system-status")
 async def system_status():
     return {"session_active": active_token is not None}
+
+
+if __name__ == "__main__":
+    import uvicorn
+
+    host = os.getenv("PURR_BIND_HOST", "0.0.0.0")
+    port = int(os.getenv("PURR_BIND_PORT", "8000"))
+    uvicorn.run("main:app", host=host, port=port, reload=False, proxy_headers=True)
