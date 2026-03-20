@@ -377,7 +377,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 1571974525}
         m_TargetAssemblyTypeName: TitleManagerScript, Assembly-CSharp
-        m_MethodName: SetIP
+        m_MethodName: SetUsername
         m_Mode: 0
         m_Arguments:
           m_ObjectArgument: {fileID: 0}

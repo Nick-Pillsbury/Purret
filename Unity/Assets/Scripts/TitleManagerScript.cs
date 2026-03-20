@@ -1,7 +1,7 @@
 using System.Collections;
 using TMPro;
 using UnityEngine;
-
+using UnityEngine.Networking;
 public class TitleManagerScript : MonoBehaviour
 {
     public string username;
@@ -16,7 +16,30 @@ public class TitleManagerScript : MonoBehaviour
 
     public void TryConnect()
     {
-        StartCoroutine(StartPing());
+        // StartCoroutine(StartPing());
+        if (username == null || username == "")
+        {
+            invalidIPText.SetActive(true);
+            invalidIPText.GetComponentInChildren<TextMeshProUGUI>().text = "Error! Please enter a valid username!";
+            return;
+        }
+        StartCoroutine(SendRequest(username));
+    }
+
+    IEnumerator SendRequest(string username)
+    {
+        UnityWebRequest www = UnityWebRequest.Post("https://10.0.0.1:8000/login", "{ \"token\": \"" + username + "\" }", "application/json");
+        yield return www.SendWebRequest();
+
+        if (www.result != UnityWebRequest.Result.Success)
+        {
+            Debug.Log(www.error);
+        }
+        else
+        {
+            Debug.Log("Successfully connected to Purret!");
+            // Load the next scene or perform any necessary actions
+        }
     }
 
     IEnumerator StartPing()
