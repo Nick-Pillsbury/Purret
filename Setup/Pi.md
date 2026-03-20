@@ -150,9 +150,6 @@ WireGuard is used to create a secure, VPN tunnel between the Raspberry Pi / loca
    Address = 10.0.0.1/24
    ListenPort = 51820
 
-   PostUp = iptables -A FORWARD -i wg0 -j ACCEPT; iptables -A FORWARD -o wg0 -j ACCEPT; iptables -t nat -A POSTROUTING -o wlan0 -j MASQUERADE
-   PostDown = iptables -D FORWARD -i wg0 -j ACCEPT; iptables -D FORWARD -o wg0 -j ACCEPT; iptables -t nat -D POSTROUTING -o wlan0 -j MASQUERADE
-
    # Client 1
    [Peer]
    PublicKey = <CLIENT1_PUBLIC_KEY>
@@ -220,8 +217,22 @@ PersistentKeepalive = 25
 
 ---
 
+
+## Set Static IP
+Force your server to use x local ip. Wifi is already set up, so it will reuse everything else.
+```bash
+nmcli connection show
+
+sudo nmcli connection modify "WiFi Name" \
+ipv4.addresses X \
+ipv4.method manual
+```
+
+---
+
 ## Installation Script
 Flash the Os with a hostname, wifi access, shh access, and a user / password. Then the installion script will auto download all dependecies for this project and setup wireguard tunnel.
+Change local IP and interface for static IP if needed.
 ```bash
 chmod +x setup.sh
 ./setup.sh

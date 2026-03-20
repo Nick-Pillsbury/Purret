@@ -79,10 +79,6 @@ PrivateKey = $SERVER_PRIVATE_KEY
 Address = 10.0.0.1/24
 ListenPort = 51820
 
-# Enable routing + NAT (wifi = wlan0)
-PostUp = iptables -A FORWARD -i wg0 -j ACCEPT; iptables -A FORWARD -o wg0 -j ACCEPT; iptables -t nat -A POSTROUTING -o wlan0 -j MASQUERADE
-PostDown = iptables -D FORWARD -i wg0 -j ACCEPT; iptables -D FORWARD -o wg0 -j ACCEPT; iptables -t nat -D POSTROUTING -o wlan0 -j MASQUERADE
-
 # Client 1
 [Peer]
 PublicKey = $CLIENT1_PUBLIC_KEY
@@ -202,6 +198,8 @@ EOF
 echo "Client configs created in ~/client-configs/"
 
 
+# Static IP
+sudo nmcli connection modify "netplan-wlan0-AXPN" ipv4.addresses 192.168.1.245/24 ipv4.method manual
 
 
 echo "Done! rebooting!"
