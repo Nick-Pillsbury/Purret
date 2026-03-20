@@ -115,11 +115,11 @@ https://www.amazon.com/HiLetgo-10pcs-650nm-Diode-Laser/dp/B071FT9HSV?crid=3EBY3I
 # 2/20/26 Construction Begins
 The main kit construction begin, letting us discover multiple areas that we needed to do more research on before continuing.
 
-![alt text](day1.png)
+![alt text](Images\day1.png)
 
-![alt text](day1-2.png)
+![alt text](Images\day1-2.png)
 
-![alt text](day1-3.png)
+![alt text](Images\day1-3.png)
 
 Construction tutorial:
 https://www.youtube.com/watch?v=CBgL3jvkomg 
@@ -132,6 +132,6 @@ https://www.youtube.com/watch?v=GwpSpOwvx9Y
 # 2/27/26 More Construction
 After having the wires, laser module and power supply arrive, We were able to almost fully complete construction. However we have discovered that the original plan to simply combine the laser module with the Raspberry Pi will not suffice.
 
-![alt text](day2-1.png)
+![alt text](Images\day2-1.png)
 
-![alt text](day2-2.png)
+![alt text](Images\day2-2.png)
