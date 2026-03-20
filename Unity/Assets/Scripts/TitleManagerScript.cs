@@ -1,3 +1,4 @@
+using System.Collections;
 using TMPro;
 using UnityEngine;
 
@@ -15,11 +16,31 @@ public class TitleManagerScript : MonoBehaviour
 
     public void TryConnect()
     {
+        StartCoroutine(StartPing());
+    }
 
-        // placeholder
-        invalidIPText.SetActive(true);
-        invalidIPText.GetComponentInChildren<TextMeshProUGUI>().text = "Error! Unable to connect to Purret!";
-        
+    IEnumerator StartPing()
+    {
+        WaitForSeconds f = new WaitForSeconds(0.05f);
+            Ping p = new Ping("10.0.0.1");
+            while (p.isDone == false)
+            {
+                yield return f;
+            }
+            PingFinished(p);
+    }
+
+    private void PingFinished(Ping p)
+    {
+        if (p.time >= 0)
+        {
+            Debug.Log("Successfully connected to Purret!");
+            // Load the next scene or perform any necessary actions
+        } else
+        {
+            invalidIPText.SetActive(true);
+            invalidIPText.GetComponentInChildren<TextMeshProUGUI>().text = "Error! Unable to connect to Purret!";
+        }
     }
 
     public void SetUsername(string usernameInput)
