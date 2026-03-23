@@ -16,12 +16,32 @@ public class RoleManagerScript : MonoBehaviour
         // placeholder
         roleUnavailableText.SetActive(true);
         roleUnavailableText.GetComponentInChildren<TMPro.TextMeshProUGUI>().text = "Error! The " + role + " role is currently unavailable!";
+        if (role == "Player")
+        {
+            // LoadPlayerScene();
+        }
+        else if (role == "Spectator")
+        {
+            // LoadSpectatorScene();
+        }
     }
 
     public void ExitToMainMenu()
     {
         // placeholder
-        Debug.Log("Exiting to main menu...");
+        UnityEngine.SceneManagement.SceneManager.LoadScene("MainMenu");
+    }
+
+    public void LoadPlayerScene()
+    {
+        // Load the player scene
+        UnityEngine.SceneManagement.SceneManager.LoadScene("ControlScene");
+    }
+
+    public void LoadSpectatorScene()
+    {
+        // Load the spectator scene
+        UnityEngine.SceneManagement.SceneManager.LoadScene("SpectatorScene");
     }
 
 }

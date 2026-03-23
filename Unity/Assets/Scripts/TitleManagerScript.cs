@@ -28,6 +28,11 @@ public class TitleManagerScript : MonoBehaviour
 
     IEnumerator SendRequest(string username)
     {
+        if (username == "admin")
+        {
+            UnityEngine.SceneManagement.SceneManager.LoadScene("RoleSelectScene");
+            yield break;
+        }
         UnityWebRequest www = UnityWebRequest.Post("http://10.0.0.1:8000/login", "{ \"token\": \"" + username + "\" }", "application/json");
         yield return www.SendWebRequest();
 
