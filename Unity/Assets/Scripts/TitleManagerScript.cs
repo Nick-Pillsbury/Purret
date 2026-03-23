@@ -1,16 +1,27 @@
 using System.Collections;
 using TMPro;
+using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.EventSystems;
+using UnityEngine.InputSystem;
 using UnityEngine.Networking;
 public class TitleManagerScript : MonoBehaviour
 {
+
     public string username;
     public GameObject invalidIPText;
 
+    public InputAction submitAction;
+
+    public bool enteringText = false;
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
+        
+    }
 
+    void Update()
+    {
         
     }
 
@@ -80,4 +91,28 @@ public class TitleManagerScript : MonoBehaviour
     {
         Application.Quit();
     }
+
+    public void ToggleEnteringText()
+    {
+        enteringText = !enteringText;
+    }
+
+    private void OnEnable()
+{
+    submitAction.Enable();
+    submitAction.performed += OnSubmitAction;
+}
+
+private void OnDisable()
+{
+    submitAction.performed -= OnSubmitAction;
+    submitAction.Disable();
+}
+
+private void OnSubmitAction(InputAction.CallbackContext context)
+{
+    if (enteringText)
+        TryConnect();
+}
+
 }

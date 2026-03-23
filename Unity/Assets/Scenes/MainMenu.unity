@@ -269,7 +269,7 @@ GameObject:
   - component: {fileID: 198288266}
   - component: {fileID: 198288265}
   m_Layer: 5
-  m_Name: IPInput
+  m_Name: UsernameInput
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -362,10 +362,34 @@ MonoBehaviour:
       m_Calls: []
   m_OnSelect:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 1571974525}
+        m_TargetAssemblyTypeName: TitleManagerScript, Assembly-CSharp
+        m_MethodName: ToggleEnteringText
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
   m_OnDeselect:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 1571974525}
+        m_TargetAssemblyTypeName: TitleManagerScript, Assembly-CSharp
+        m_MethodName: ToggleEnteringText
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
   m_OnTextSelection:
     m_PersistentCalls:
       m_Calls: []
@@ -1429,6 +1453,24 @@ MonoBehaviour:
   m_EditorClassIdentifier: '::'
   username: 
   invalidIPText: {fileID: 851027013}
+  submitAction:
+    m_Name: Submit
+    m_Type: 0
+    m_ExpectedControlType: 
+    m_Id: b99a0ace-3e8e-4b45-bda7-d8fd8bae2441
+    m_Processors: 
+    m_Interactions: 
+    m_SingletonActionBindings:
+    - m_Name: 
+      m_Id: 1ff71feb-5a49-4573-9380-7e4c95596c77
+      m_Path: <Keyboard>/enter
+      m_Interactions: 
+      m_Processors: 
+      m_Groups: 
+      m_Action: Submit
+      m_Flags: 0
+    m_Flags: 0
+  enteringText: 0
 --- !u!4 &1571974526
 Transform:
   m_ObjectHideFlags: 0
@@ -1722,7 +1764,7 @@ GameObject:
   - component: {fileID: 2091141049}
   - component: {fileID: 2091141048}
   m_Layer: 5
-  m_Name: Image
+  m_Name: PlaceholderCat
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
