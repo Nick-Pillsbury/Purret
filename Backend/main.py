@@ -2,20 +2,13 @@ from __future__ import annotations
 
 import os
 import uuid
-from contextlib import asynccontextmanager
-from typing import Dict, Literal, Optional
+from typing import Any, Dict, Literal, Optional
 
 from fastapi import Depends, FastAPI, HTTPException
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import BaseModel, Field
 
-from wireguard_access import configure_wireguard_allowlist, require_wireguard_or_raise
-
-
-@asynccontextmanager
-async def lifespan(_: FastAPI):
-    require_wireguard_or_raise()
-    yield
+app = FastAPI(title="Purret Control API (Skeleton)")
 
 #
 # NOTE
@@ -23,9 +16,6 @@ async def lifespan(_: FastAPI):
 # Every endpoint is `async def` and returns placeholder JSON so you can fill in
 # real Docker/hardware commands later.
 #
-
-app = FastAPI(title="Purret Control API (Skeleton)", lifespan=lifespan)
-configure_wireguard_allowlist(app)
 
 
 # --- Minimal auth: single-user lock (only one username logged in at a time) ---

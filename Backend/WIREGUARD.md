@@ -18,28 +18,6 @@ PURR_BIND_HOST=0.0.0.0 PURR_BIND_PORT=8000 python3 main.py
 PURR_BIND_HOST=10.7.0.1 PURR_BIND_PORT=8000 python3 main.py
 ```
 
-### Require WireGuard / restrict access (recommended for demos)
-
-`Backend/main.py` supports two environment-variable gates:
-
-- `PURR_REQUIRE_WIREGUARD=1`
-  - On Linux (Pi), fails startup if the WireGuard interface isn’t up.
-  - Optional: `PURR_WIREGUARD_INTERFACE=wg0`, `PURR_WIREGUARD_CIDR=10.7.0.0/24`
-- `PURR_WIREGUARD_ONLY=1`
-  - Adds an IP allowlist middleware.
-  - Configure allowed networks via `PURR_ALLOWED_CIDRS` (comma-separated CIDRs).
-
-Example:
-
-```bash
-PURR_REQUIRE_WIREGUARD=1 \
-PURR_WIREGUARD_INTERFACE=wg0 \
-PURR_WIREGUARD_CIDR=10.7.0.0/24 \
-PURR_WIREGUARD_ONLY=1 \
-PURR_ALLOWED_CIDRS=10.7.0.0/24 \
-python3 main.py
-```
-
 ### Client-side “connection”
 
 On your laptop/desktop:
