@@ -12,15 +12,20 @@ app = FastAPI(title="Purret Control API (Skeleton)")
 
 #
 # NOTE
-# This file is intentionally a minimal skeleton that mirrors `endpoints.md`.
-# Every endpoint is `async def` and returns placeholder JSON so you can fill in
-# real Docker/hardware commands later.
 #
+# PURR_BIND_HOST=10.0.0.1 PURR_BIND_PORT=8000 python main.py
+#
+# curl -X POST http://10.0.0.1:8000/login
+# curl -X POST http://10.0.0.1:8000/logout -H "Authorization: Bearer $TOKEN"
 
 
 # --- Minimal auth: single-user lock (only one username logged in at a time) ---
 security = HTTPBearer()
 active_token: str | None = None
+
+
+class LoginRequest(BaseModel):
+    username: str = Field(default="default", min_length=1, max_length=64)
 
 
 def require_session(credentials: HTTPAuthorizationCredentials = Depends(security)) -> str:
@@ -31,10 +36,11 @@ def require_session(credentials: HTTPAuthorizationCredentials = Depends(security
 
 
 @app.post("/login")
-async def login():
+async def login(body: LoginRequest | None = None):
     global active_token
     if active_token is not None:
         raise HTTPException(status_code=403, detail="System already in use")
+
     token = str(uuid.uuid4())
     active_token = token
     return {"token": token}
