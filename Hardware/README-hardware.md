@@ -46,7 +46,7 @@ Purret is composed of four modular components that communicate over a private Do
 
 ### Servo Specifications
 
-| | Top Servo (Pan) | Bottom Servo (Tilt) |
+| | Bottom Servo (Pan) | Top Servo (Tilt) |
 |---|---|---|
 | Range | 0° – 270° | 0° – 180° |
 | Torque | 20 kg·cm | 25 kg·cm |
