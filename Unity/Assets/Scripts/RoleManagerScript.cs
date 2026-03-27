@@ -35,7 +35,23 @@ public class RoleManagerScript : MonoBehaviour
     public void LoadPlayerScene()
     {
         // Load the player scene
-        UnityEngine.SceneManagement.SceneManager.LoadScene("ControlScene");
+        switch (Application.platform)
+        {
+            case RuntimePlatform.WindowsPlayer:
+            case RuntimePlatform.WindowsEditor:
+            case RuntimePlatform.OSXEditor:
+            case RuntimePlatform.OSXPlayer:
+            case RuntimePlatform.LinuxPlayer:
+                UnityEngine.SceneManagement.SceneManager.LoadScene("ControlScene");
+                break;
+            case RuntimePlatform.IPhonePlayer:
+            case RuntimePlatform.Android:
+                UnityEngine.SceneManagement.SceneManager.LoadScene("MobileControlScene");
+                break;
+            default:
+                Debug.LogError("Unsupported platform for player role.");
+                break;
+        }
     }
 
     public void LoadSpectatorScene()
