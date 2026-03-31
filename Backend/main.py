@@ -8,7 +8,7 @@ from fastapi import Depends, FastAPI, HTTPException
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import BaseModel, Field
 
-app = FastAPI(title="Purret Control API (Skeleton)")
+app = FastAPI(title="Purret Control API (Skele")
 
 #
 # NOTE
