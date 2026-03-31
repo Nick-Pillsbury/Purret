@@ -7,13 +7,13 @@ This document outlines the tools, design decisions, configuration, and architect
 This container is designed to run on:
 - Raspberry Pi 5 (8GB)
 - USB Webcam (`/dev/video0`)
-- USB 3.0 External Storage (optional, for recording)
+- USB 3.0 External Storage (for recordings)
 
 ---
 
 ## Functionality
 This container is responsible for:
-- Receiving control commands via a C++ API
+- Receiving control commands via a Python API
 - Capturing video from a USB webcam
 - Encoding video using H.264
 - Streaming video via RTSP
@@ -23,15 +23,12 @@ This container is responsible for:
 
 ## Tools and Technology Stack
 
-### 1. C++
-C++ was selected due to its performance characteristics and low-latency capabilities. The system must operate in a resource-constrained environment, as multiple containers run concurrently on the Raspberry Pi 5.
+### 1. Python FastAPI
+FastAPI was selected due to its ease of use and high compatibility.
 **Benefits:**
-- High performance  
-- Low memory overhead  
-- Fine-grained hardware control  
-- Suitable for real-time processing  
-
----
+- Compatibility across clients and platforms
+- Ease of development and maintenance
+- Well-maintained and fast framework
 
 ### 2. FFmpeg
 FFmpeg was selected for video processing and streaming because it provides:
@@ -39,36 +36,37 @@ FFmpeg was selected for video processing and streaming because it provides:
 - Low-latency streaming capabilities  
 - Hardware acceleration support on Raspberry Pi  
 - Stable and production-proven multimedia handling  
-Implementing video encoding from scratch would significantly increase complexity and development time.
 
----
+### 3. MediaMTX
+MediaMTX was selected as the streaming server because of:
+- Compatibility with RTSP/HLS/WebRTC clients
+- Low resource usage
+- Ability to ingest RTSP from the Pi and redistribute to multiple clients
 
-### 3. RTSP (Real-Time Streaming Protocol)
+### 4. RTSP (Real-Time Streaming Protocol)
 RTSP was chosen as the streaming protocol because:
-- Supported by Unity (via plugins or native solutions)  
-- Designed for low-latency streaming  
-- More efficient than HTTP-based streaming for real-time use  
-- Works seamlessly with H.264 compression  
+- Designed for low-latency streaming
+- More efficient than HTTP-based streaming for real-time use
+- Works seamlessly with H.264 compression
+
 **Default streaming port:** `8554`
 
----
-
-### 4. H.264 Compression
+### 5. H.264 Compression
 H.264 was selected due to:
 - Hardware acceleration support on Raspberry Pi 5  
-- High compression efficiency  
-- Low bandwidth usage  
-- Broad compatibility (including Unity clients)  
+- High compression efficiency
+- Low bandwidth usage
+- Broad compatibility with clients
 
 ---
 
-### 5. Docker
+### 6. Docker
 Docker was selected for containerization because it provides:
 - Hardware device access support (`/dev/video0`, USB storage)  
-- Service isolation between system components  
-- Environment consistency across development and deployment  
-- Simplified dependency management  
-- Scalable and modular architecture  
+- Service isolation between system components
+- Environment consistency across development and deployment
+- Simplified dependency management
+- Scalable and modular architecture
 
 ---
 
@@ -78,13 +76,13 @@ Docker was selected for containerization because it provides:
             ↓
       FFmpeg Process
             ↓
-   H.264 Hardware Encoding
-            ↓
       RTSP Stream (8554)
+            ↓
+        MediaMTX Server
          ↓            ↓
   WireGuard Tunnel   Local Unity Client
          ↓
-     Remote Unity Client
+    Remote Unity Client
 ```
 
 ---
