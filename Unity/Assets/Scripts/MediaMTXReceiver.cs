@@ -7,7 +7,7 @@ using Unity.WebRTC;
 
 public class MediaMtxWhepReceiver : MonoBehaviour
 {
-    [SerializeField] private string whepUrl = "http://192.168.1.245:8889/mystream/whep";
+    [SerializeField] public string whepUrl = "http://192.168.1.245:8889/stream/whep";
     [SerializeField] private RawImage targetImage;
 
     private RTCPeerConnection peer;

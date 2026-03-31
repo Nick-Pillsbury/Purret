@@ -1,6 +1,11 @@
+using System.Collections;
+using TMPro;
+using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.EventSystems;
+using UnityEngine.InputSystem;
+using UnityEngine.Networking;
 using UnityEngine.SceneManagement;
-
 public class RoleManagerScript : MonoBehaviour
 {
     public GameObject roleUnavailableText;
@@ -11,17 +16,42 @@ public class RoleManagerScript : MonoBehaviour
         
     }
 
+    IEnumerator SendRequest(string username)
+    {
+        if (username == "admin")
+        {
+            UnityEngine.SceneManagement.SceneManager.LoadScene("RoleSelectScene");
+            yield break;
+        }
+        UnityWebRequest www = UnityWebRequest.Post("http://10.0.0.1:8000/login", "{ \"token\": \"" + username + "\" }", "application/json");
+        yield return www.SendWebRequest();
+
+        if (www.result != UnityWebRequest.Result.Success)
+        {
+            Debug.Log(www.error);
+            roleUnavailableText.SetActive(true);
+            roleUnavailableText.GetComponentInChildren<TMPro.TextMeshProUGUI>().text = "Error! The player role is currently unavailable!";
+        }
+        else
+        {
+            Debug.Log("Successfully logged in as player!");
+            SceneManager.LoadScene("ControlScene");
+            // Load the next scene or perform any necessary actions
+        }
+    }
+
     public void TryRole(string role)
     {
         // placeholder
-        roleUnavailableText.SetActive(true);
-        roleUnavailableText.GetComponentInChildren<TMPro.TextMeshProUGUI>().text = "Error! The " + role + " role is currently unavailable!";
+        
         if (role == "Player")
         {
+            StartCoroutine(SendRequest("player"));
             // LoadPlayerScene();
         }
         else if (role == "Spectator")
         {
+            SceneManager.LoadScene("SpectatorScene");
             // LoadSpectatorScene();
         }
     }

@@ -5,6 +5,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 using UnityEngine.Networking;
+using UnityEngine.SceneManagement;
 public class TitleManagerScript : MonoBehaviour
 {
 
@@ -34,29 +35,10 @@ public class TitleManagerScript : MonoBehaviour
             invalidIPText.GetComponentInChildren<TextMeshProUGUI>().text = "Error! Please enter a valid username!";
             return;
         }
-        StartCoroutine(SendRequest(username));
+        StartCoroutine(StartPing());
     }
 
-    IEnumerator SendRequest(string username)
-    {
-        if (username == "admin")
-        {
-            UnityEngine.SceneManagement.SceneManager.LoadScene("RoleSelectScene");
-            yield break;
-        }
-        UnityWebRequest www = UnityWebRequest.Post("http://10.0.0.1:8000/login", "{ \"token\": \"" + username + "\" }", "application/json");
-        yield return www.SendWebRequest();
 
-        if (www.result != UnityWebRequest.Result.Success)
-        {
-            Debug.Log(www.error);
-        }
-        else
-        {
-            Debug.Log("Successfully connected to Purret!");
-            // Load the next scene or perform any necessary actions
-        }
-    }
 
     IEnumerator StartPing()
     {
@@ -74,6 +56,7 @@ public class TitleManagerScript : MonoBehaviour
         if (p.time >= 0)
         {
             Debug.Log("Successfully connected to Purret!");
+            SceneManager.LoadScene("RoleSelectScene");
             // Load the next scene or perform any necessary actions
         } else
         {
