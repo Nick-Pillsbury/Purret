@@ -14,26 +14,28 @@ servo1 = servo.Servo(PCA.channels[0]) # Servo 1
 servo2 = servo.Servo(PCA.channels[1]) # Servo 2
 
 # Servo 2 adjustments for different range of movement
-servo2.actuation_range = 270
-# # Needs new PWM range to accommodate the wider range of movement
-servo2.min_pulse = 200
-servo2.max_pulse = 2800
+MIN_PULSE = 500
+MAX_PULSE = 2500
 
-# servo2.actuation_range = 180
-# servo2.min_pulse = 500
-# servo2.max_pulse = 2500
+def raw_pulse(channel, pulse_us):
+    tick = int((pulse_us / 20000) * 4096)
+    PCA.channels[channel].duty_cycle = tick << 4
 
 
 def servo_move(servo, angle):
-  if servo == servo2:               
+  if servo == servo1:
+    if angle > 180 or 0 > angle: # same angle check for servo 1 with its range of movement
+      raise ValueError("Invalid angle provided for servo 1") # servo 1 cannot go below 10 degrees as the bar will get stuck on the base of the structure
+    pulse_us = MIN_PULSE + (angle / 180) * (MAX_PULSE - MIN_PULSE ) # calculates the pulse width in microseconds based on the angle
+    raw_pulse(0, pulse_us) # sends the pulse to the servo
+  else: 
     if angle > 270 or angle < 0: # servo 2 has a different range of movement - this checks if valid angle
       raise ValueError("Invalid angle provided for servo 2")
-  else:
-    if angle > 180 or 10 > angle: # same angle check for servo 1 with its range of movement
-      raise ValueError("Invalid angle provided for servo 1") # servo 1 cannot go below 10 degrees as the bar will get stuck on the base of the structure
-  # Sets the angle of the servo to specified value
-  servo.angle = angle
-  
+    pulse_us = MIN_PULSE + (angle / 270) * (MAX_PULSE - MIN_PULSE ) # calculates the pulse width in microseconds based on the angle
+    raw_pulse(1, pulse_us) # sends the pulse to the servo
+    
+    
+    
 def both_move(angle1, angle2):
   servo_move(servo1, angle1) #move first servo
   servo_move(servo2, angle2) #move second servo
@@ -41,14 +43,11 @@ def both_move(angle1, angle2):
 def reset_servos():
   both_move(90, 90) # reset both servos to 90 degree position
   
-# reset_servos()
 
-# both_move(0, 0) # move both servos to 0 degree position
-
-# both_move(180, 270) # move both servos to their max angle positions
-
-# servo_move(servo1, 10)
-
-servo_move(servo2, 0)
+servo_move(servo1, 180)
 time.sleep(2)
-servo_move(servo2, 180)
+servo_move(servo1, 0)
+time.sleep(2)
+servo_move(servo2, 270)
+time.sleep(2)
+servo_move(servo2, 0)
