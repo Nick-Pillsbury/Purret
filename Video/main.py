@@ -1,8 +1,8 @@
-from fastapi import FastAPI
-import subprocess
 import os
 import signal
-
+import subprocess
+from datetime import datetime
+from fastapi import FastAPI
 
 '''
 v4l2-ctl --list-formats-ext - check camera outputs and frame rate
@@ -30,54 +30,30 @@ ffmpeg -f v4l2 -input_format h264 -framerate 30 -video_size 1920x1080 -i /dev/vi
        -c copy -tune zerolatency -preset ultrafast -f flv rtmp://localhost:1935/stream
 
 '''
-
+import os
+import signal
+import subprocess
+from datetime import datetime
+from fastapi import FastAPI
 
 app = FastAPI()
 
 # Track running processes
 ffmpeg_process = None
 recording_process = None
-media_server_process = None
 
-# ---------- MEDIA SERVER ----------
+# Container path
+recordings_dir = "/recordings"
 
-@app.post("/media_server/start")
-def start_media_server():
-    global media_server_process
-    if media_server_process is not None:
-        return {"status": "already running"}
-
-    # run MediaMTX via Docker
-    cmd = [
-        "docker", "run", "-d",
-        "--name", "mediamtx",
-        "-p", "1935:1935",
-        "-p", "8889:8889",
-        "bluenviron/mediamtx:latest"
-    ]
-    result = subprocess.run(cmd, capture_output=True, text=True)
-    if result.returncode != 0:
-        return {"status": "error", "error": result.stderr}
-    media_server_process = result.stdout.strip()
-    return {"status": "started", "container_id": media_server_process}
-
-@app.post("/media_server/stop")
-def stop_media_server():
-    global media_server_process
-    if media_server_process is None:
-        return {"status": "not running"}
-    subprocess.run(["docker", "stop", "mediamtx"])
-    subprocess.run(["docker", "rm", "mediamtx"])
-    media_server_process = None
-    return {"status": "stopped"}
 
 # ---------- STREAM ----------
 @app.post("/stream/start")
 def start_stream():
     global ffmpeg_process
+
     if ffmpeg_process is not None:
         return {"status": "stream already running"}
-    
+
     ffmpeg_cmd = [
         "ffmpeg",
         "-f", "v4l2",
@@ -85,56 +61,80 @@ def start_stream():
         "-framerate", "30",
         "-video_size", "1920x1080",
         "-i", "/dev/video0",
-        "-c:v", "copy",
+        "-c", "copy",
         "-preset", "ultrafast",
         "-tune", "zerolatency",
         "-f", "flv",
         "rtmp://localhost:1935/stream"
     ]
-    
+
     ffmpeg_process = subprocess.Popen(ffmpeg_cmd)
     return {"status": "stream started", "pid": ffmpeg_process.pid}
+
 
 @app.post("/stream/stop")
 def stop_stream():
     global ffmpeg_process
+
     if ffmpeg_process is None:
         return {"status": "stream not running"}
-    ffmpeg_process.terminate()
+    
+    if recording_process is not None:
+        return {"status": "stop recording before stopping stream"}
+
+    ffmpeg_process.send_signal(signal.SIGINT)
+    ffmpeg_process.wait()
     ffmpeg_process = None
+
     return {"status": "stream stopped"}
 
-# ---------- RECORDING ----------
 
+# ---------- RECORDING ----------
 @app.post("/recording/start")
 def start_recording():
     global recording_process
+
     if recording_process is not None:
         return {"status": "recording already running"}
 
+    os.makedirs(recordings_dir, exist_ok=True)
+
+    filename = os.path.join(
+        recordings_dir,
+        f"recording_{datetime.now().strftime('%Y%m%d_%H%M%S')}.mp4"
+    )
+
     record_cmd = [
         "ffmpeg",
-        "-f", "v4l2",
-        "-input_format", "h264",
-        "-framerate", "30",
-        "-video_size", "1920x1080",
-        "-i", "/dev/video0",
-        "-c:v", "copy",
-        "-preset", "ultrafast",
-        "-tune", "zerolatency",
-        "-f", "mp4",
-        "recording.mp4"
+        "-rtsp_transport", "tcp",
+        "-i", "rtsp://localhost:8554/stream",
+        "-c", "copy",
+        filename
     ]
+
     recording_process = subprocess.Popen(record_cmd)
-    return {"status": "recording started", "pid": recording_process.pid}
+
+    return {"status": "recording started", "file": filename}
+
 
 @app.post("/recording/stop")
 def stop_recording():
     global recording_process
+
     if recording_process is None:
         return {"status": "recording not running"}
-    recording_process.terminate()
+
+    recording_process.send_signal(signal.SIGINT)
+    recording_process.wait()
     recording_process = None
+
     return {"status": "recording stopped"}
 
 
+# ---------- STATUS ----------
+@app.get("/status")
+def status():
+    return {
+        "stream": "running" if ffmpeg_process else "stopped",
+        "recording": "running" if recording_process else "stopped"
+    }
