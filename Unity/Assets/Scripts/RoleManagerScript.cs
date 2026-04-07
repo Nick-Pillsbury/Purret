@@ -6,9 +6,17 @@ using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 using UnityEngine.Networking;
 using UnityEngine.SceneManagement;
+using System;
+
+[Serializable]
+public class TokenResponse
+{
+    public string token;
+}
 public class RoleManagerScript : MonoBehaviour
 {
     public GameObject roleUnavailableText;
+    public static string token;
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
@@ -16,27 +24,33 @@ public class RoleManagerScript : MonoBehaviour
         
     }
 
-    IEnumerator SendRequest(string username)
+    IEnumerator Login(string username)
     {
-        if (username == "admin")
-        {
-            UnityEngine.SceneManagement.SceneManager.LoadScene("RoleSelectScene");
-            yield break;
-        }
-        UnityWebRequest www = UnityWebRequest.Post("http://10.0.0.1:8000/login", "{ \"token\": \"" + username + "\" }", "application/json");
-        yield return www.SendWebRequest();
+        string json = "{\"username\":\"" + username + "\"}";
+        var request = new UnityWebRequest("http://10.0.0.1:8000/login", "POST");
+        byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(json);
 
-        if (www.result != UnityWebRequest.Result.Success)
+        request.uploadHandler = new UploadHandlerRaw(bodyRaw);
+        request.downloadHandler = new DownloadHandlerBuffer();
+        request.SetRequestHeader("Content-Type", "application/json");
+        request.SetRequestHeader("Accept", "application/json");
+
+        yield return request.SendWebRequest();
+
+        if (request.result != UnityWebRequest.Result.Success)
         {
-            Debug.Log(www.error);
+            Debug.Log(request.responseCode + " " + request.error);
+            Debug.Log(request.downloadHandler.text);
             roleUnavailableText.SetActive(true);
             roleUnavailableText.GetComponentInChildren<TMPro.TextMeshProUGUI>().text = "Error! The player role is currently unavailable!";
         }
         else
         {
-            Debug.Log("Successfully logged in as player!");
+            Debug.Log(request.downloadHandler.text);
+            string tokenValue = JsonUtility.FromJson<TokenResponse>(request.downloadHandler.text).token;
+            token = tokenValue;
             SceneManager.LoadScene("ControlScene");
-            // Load the next scene or perform any necessary actions
+            // parse token from JSON and store it
         }
     }
 
@@ -46,7 +60,7 @@ public class RoleManagerScript : MonoBehaviour
         
         if (role == "Player")
         {
-            StartCoroutine(SendRequest("player"));
+            StartCoroutine(Login("player"));
             // LoadPlayerScene();
         }
         else if (role == "Spectator")

@@ -129,7 +129,10 @@ GameObject:
   m_Component:
   - component: {fileID: 187110216}
   - component: {fileID: 187110215}
+  - component: {fileID: 187110218}
+  - component: {fileID: 187110219}
   - component: {fileID: 187110217}
+  - component: {fileID: 187110220}
   m_Layer: 0
   m_Name: GameManager
   m_TagString: Untagged
@@ -149,13 +152,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2202d5a834ce546b4b0b55521fe28400, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GameManagerScript
-  laserOnButtonSprite: {fileID: -7480989280063639859, guid: 0506e871c5d604ea98a56352baf50938, type: 3}
-  laserOffButtonSprite: {fileID: -5815973788868159261, guid: ed6e0ce082c8e4b76950b757c2244043, type: 3}
-  laserToggleButton: {fileID: 552629362}
-  recordingOnSprite: {fileID: -2363815098056547076, guid: d2dcb4cbb72df4823ac73cffeddd67db, type: 3}
-  recordingOffSprite: {fileID: 4566612847595798088, guid: 7c901da597a054a6c975cbd449800d18, type: 3}
-  recordingButton: {fileID: 886191560}
-  currentSpeed: 50
 --- !u!4 &187110216
 Transform:
   m_ObjectHideFlags: 0
@@ -201,6 +197,49 @@ MonoBehaviour:
   m_DefaultActionMap: 
   m_SplitScreenIndex: -1
   m_Camera: {fileID: 0}
+--- !u!114 &187110218
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 187110214}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ce2333e9264724dec9701159b34f933a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::RecordingToggleScript
+  recordingOnSprite: {fileID: -2363815098056547076, guid: d2dcb4cbb72df4823ac73cffeddd67db, type: 3}
+  recordingOffSprite: {fileID: 4566612847595798088, guid: 7c901da597a054a6c975cbd449800d18, type: 3}
+  recordingButton: {fileID: 886191560}
+--- !u!114 &187110219
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 187110214}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e9efe7fecc36c48bfa0e1bbf4f20322a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LaserToggleScript
+  laserOnButtonSprite: {fileID: -7480989280063639859, guid: 0506e871c5d604ea98a56352baf50938, type: 3}
+  laserOffButtonSprite: {fileID: -5815973788868159261, guid: ed6e0ce082c8e4b76950b757c2244043, type: 3}
+  laserToggleButton: {fileID: 552629362}
+--- !u!114 &187110220
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 187110214}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6f2b5d076759e41168d94aeb30453143, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CameraMovementScript
+  currentSpeed: 50
 --- !u!1 &339886197
 GameObject:
   m_ObjectHideFlags: 0
@@ -424,8 +463,8 @@ MonoBehaviour:
   m_OnValueChanged:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 187110215}
-        m_TargetAssemblyTypeName: GameManagerScript, Assembly-CSharp
+      - m_Target: {fileID: 187110220}
+        m_TargetAssemblyTypeName: CameraMovementScript, Assembly-CSharp
         m_MethodName: AdjustSpeed
         m_Mode: 0
         m_Arguments:
@@ -655,8 +694,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 187110215}
-        m_TargetAssemblyTypeName: GameManagerScript, Assembly-CSharp
+      - m_Target: {fileID: 187110219}
+        m_TargetAssemblyTypeName: LaserToggleScript, Assembly-CSharp
         m_MethodName: ToggleLaser
         m_Mode: 1
         m_Arguments:
@@ -1030,8 +1069,8 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4294967295
-  m_fontColor: {r: 1, g: 1, b: 1, a: 1}
+    rgba: 4278190080
+  m_fontColor: {r: 0, g: 0, b: 0, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
   m_fontColorGradient:
@@ -1184,8 +1223,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 187110215}
-        m_TargetAssemblyTypeName: GameManagerScript, Assembly-CSharp
+      - m_Target: {fileID: 187110218}
+        m_TargetAssemblyTypeName: RecordingToggleScript, Assembly-CSharp
         m_MethodName: ToggleRecording
         m_Mode: 1
         m_Arguments:
