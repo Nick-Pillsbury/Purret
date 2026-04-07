@@ -1,6 +1,9 @@
 from __future__ import annotations
 
+import json
 import os
+import urllib.error
+import urllib.request
 import uuid
 from typing import Any, Dict, Literal, Optional
 
@@ -8,7 +11,7 @@ from fastapi import Depends, FastAPI, HTTPException
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import BaseModel, Field
 
-app = FastAPI(title="Purret Control API (Skele")
+app = FastAPI(title="Purret Control API (Skeleton)")
 
 #
 # NOTE
@@ -47,7 +50,7 @@ async def login(body: LoginRequest | None = None):
 
 
 @app.post("/logout")
-async def logout(_: str = Depends(require_session)):
+async def logout(_: None = None):
     global active_token
     active_token = None
     return {"ok": True}
@@ -74,6 +77,50 @@ class ContainerOptions(BaseModel):
 
 
 # =============================================================================
+# Camera service proxy
+#
+# `Backend/camera testing/test.py` is treated as a separate camera service.
+# This API proxies requests to it and returns its JSON responses.
+# =============================================================================
+
+def _camera_service_base_url() -> str:
+    # Example: http://127.0.0.1:8001
+    return os.getenv("PURR_CAMERA_SERVICE_URL", "http://127.0.0.1:8001").rstrip("/")
+
+
+def _camera_service_timeout_s() -> float:
+    try:
+        return float(os.getenv("PURR_CAMERA_SERVICE_TIMEOUT_S", "5"))
+    except ValueError:
+        return 5.0
+
+
+def _camera_service_request(method: str, path: str) -> dict[str, Any]:
+    url = f"{_camera_service_base_url()}{path}"
+    req = urllib.request.Request(url, method=method)
+    req.add_header("Accept", "application/json")
+
+    try:
+        with urllib.request.urlopen(req, timeout=_camera_service_timeout_s()) as resp:
+            payload = resp.read()
+    except urllib.error.HTTPError as exc:
+        try:
+            body = exc.read().decode("utf-8", "ignore")
+        except Exception:
+            body = ""
+        raise HTTPException(status_code=502, detail=f"Camera service error ({exc.code})") from exc
+    except urllib.error.URLError as exc:
+        raise HTTPException(status_code=502, detail="Camera service unreachable") from exc
+
+    if not payload:
+        return {}
+    try:
+        return json.loads(payload.decode("utf-8"))
+    except json.JSONDecodeError as exc:
+        raise HTTPException(status_code=502, detail="Camera service returned non-JSON") from exc
+
+
+# =============================================================================
 # 1) Front to Master (HTTP)
 # - Servo Movement (Up, Down, Left, Right)
 # - Camera
@@ -85,34 +132,34 @@ class ContainerOptions(BaseModel):
 # =============================================================================
 
 
-@app.post("/front/servo/move")
-async def front_servo_move(body: ServoMoveRequest, _: str = Depends(require_session)):
+@app.post("/front/servo/move/{direction}")
+async def front_servo_move(direction: str, body: ServoMoveRequest, _: str = Depends(require_session)):
     return {"ok": True, "todo": "send servo move to master/servo service", "body": body.model_dump()}
 
 
 @app.post("/front/camera/start")
 async def front_camera_start(_: str = Depends(require_session)):
-    return {"ok": True, "todo": "tell master to start camera"}
+    return {"ok": True, **_camera_service_request("POST", "/stream/start")}
 
 
 @app.post("/front/camera/stop")
 async def front_camera_stop(_: str = Depends(require_session)):
-    return {"ok": True, "todo": "tell master to stop camera"}
+    return {"ok": True, **_camera_service_request("POST", "/stream/stop")}
 
 
 @app.post("/front/camera/record/start")
 async def front_camera_record_start(_: str = Depends(require_session)):
-    return {"ok": True, "todo": "tell master/camera to start recording"}
+    return {"ok": True, **_camera_service_request("POST", "/recording/start")}
 
 
 @app.post("/front/camera/record/stop")
 async def front_camera_record_stop(_: str = Depends(require_session)):
-    return {"ok": True, "todo": "tell master/camera to stop recording"}
+    return {"ok": True, **_camera_service_request("POST", "/recording/stop")}
 
 
 @app.get("/front/camera/health")
 async def front_camera_health(_: str = Depends(require_session)):
-    return {"ok": True, "todo": "proxy camera health check"}
+    return {"ok": True, **_camera_service_request("GET", "/status")}
 
 
 @app.post("/front/laser/on")
@@ -171,27 +218,27 @@ async def front_report_error(body: ErrorReport, _: str = Depends(require_session
 
 @app.post("/camera/start")
 async def camera_start(_: str = Depends(require_session)):
-    return {"ok": True, "todo": "master->camera start"}
+    return {"ok": True, **_camera_service_request("POST", "/stream/start")}
 
 
 @app.post("/camera/stop")
 async def camera_stop(_: str = Depends(require_session)):
-    return {"ok": True, "todo": "master->camera stop"}
+    return {"ok": True, **_camera_service_request("POST", "/stream/stop")}
 
 
 @app.post("/camera/record/start")
 async def camera_record_start(_: str = Depends(require_session)):
-    return {"ok": True, "todo": "master->camera record start"}
+    return {"ok": True, **_camera_service_request("POST", "/recording/start")}
 
 
 @app.post("/camera/record/stop")
 async def camera_record_stop(_: str = Depends(require_session)):
-    return {"ok": True, "todo": "master->camera record stop"}
+    return {"ok": True, **_camera_service_request("POST", "/recording/stop")}
 
 
 @app.get("/camera/health")
 async def camera_health(_: str = Depends(require_session)):
-    return {"ok": True, "todo": "master->camera health check"}
+    return {"ok": True, **_camera_service_request("GET", "/status")}
 
 
 # =============================================================================
@@ -212,9 +259,9 @@ async def servo_stop(_: str = Depends(require_session)):
     return {"ok": True, "todo": "master->servo stop"}
 
 
-@app.post("/servo/move")
-async def servo_move(body: ServoMoveRequest, _: str = Depends(require_session)):
-    return {"ok": True, "todo": "master->servo movement", "body": body.model_dump()}
+@app.post("/servo/move/{direction}")
+async def servo_move(direction: str, body: ServoMoveRequest, _: str = Depends(require_session)):
+    return {"ok": True, "todo": "master->servo movement", "direction": direction, "body": body.model_dump()}
 
 
 @app.get("/servo/health")
