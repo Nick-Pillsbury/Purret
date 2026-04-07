@@ -20,6 +20,7 @@ app = FastAPI(title="Purret Control API (Skeleton)")
 #
 # curl -X POST http://10.0.0.1:8000/login
 # curl -X POST http://10.0.0.1:8000/logout -H "Authorization: Bearer $TOKEN"
+#
 
 
 # --- Minimal auth: single-user lock (only one username logged in at a time) ---
@@ -56,12 +57,30 @@ async def logout(_: None = None):
     return {"ok": True}
 
 
-# --- Shared request models used across multiple endpoint groups ---
-Direction = Literal["up", "down", "left", "right"]
+Direction = Literal[
+    "up",
+    "down",
+    "left",
+    "right",
+    "up_left",
+    "up_right",
+    "down_left",
+    "down_right",
+    "stop",
+]
 
 
 class ServoMoveRequest(BaseModel):
-    direction: Direction
+    # Preferred: joystick-style vector from frontend.
+    # - x: left (-1) .. right (+1)
+    # - y: down (-1) .. up (+1)
+    # You can also send `vector: [x, y]` instead of separate fields.
+    x: float | None = None
+    y: float | None = None
+    vector: tuple[float, float] | None = None
+
+    # Back-compat / convenience: discrete direction (8-way + stop).
+    direction: Direction | None = None
     step: int = Field(default=5, ge=1, le=30)
 
 
@@ -74,6 +93,69 @@ class ErrorReport(BaseModel):
 
 class ContainerOptions(BaseModel):
     options: Dict[str, Any] = Field(default_factory=dict)
+
+
+# =============================================================================
+# Servo service proxy
+#
+# `Backend/servo testing/test.py` is treated as a separate servo service.
+# This API proxies requests to it and returns its JSON responses.
+# =============================================================================
+
+def _clamp(value: float, lo: float, hi: float) -> float:
+    return max(lo, min(hi, value))
+
+
+_DIR_TO_VEC: dict[str, tuple[float, float]] = {
+    "up": (0.0, 1.0),
+    "down": (0.0, -1.0),
+    "left": (-1.0, 0.0),
+    "right": (1.0, 0.0),
+    "up_left": (-1.0, 1.0),
+    "up_right": (1.0, 1.0),
+    "down_left": (-1.0, -1.0),
+    "down_right": (1.0, -1.0),
+    "stop": (0.0, 0.0),
+}
+
+def _servo_service_base_url() -> str:
+    # Example: http://127.0.0.1:8002
+    return os.getenv("PURR_SERVO_SERVICE_URL", "http://127.0.0.1:8002").rstrip("/")
+
+
+def _servo_service_timeout_s() -> float:
+    try:
+        return float(os.getenv("PURR_SERVO_SERVICE_TIMEOUT_S", "5"))
+    except ValueError:
+        return 5.0
+
+
+def _servo_service_request(method: str, path: str, payload: dict[str, Any] | None = None) -> dict[str, Any]:
+    url = f"{_servo_service_base_url()}{path}"
+
+    data: bytes | None = None
+    if payload is not None:
+        data = json.dumps(payload).encode("utf-8")
+
+    req = urllib.request.Request(url, method=method, data=data)
+    req.add_header("Accept", "application/json")
+    if data is not None:
+        req.add_header("Content-Type", "application/json")
+
+    try:
+        with urllib.request.urlopen(req, timeout=_servo_service_timeout_s()) as resp:
+            raw = resp.read()
+    except urllib.error.HTTPError as exc:
+        raise HTTPException(status_code=502, detail=f"Servo service error ({exc.code})") from exc
+    except urllib.error.URLError as exc:
+        raise HTTPException(status_code=502, detail="Servo service unreachable") from exc
+
+    if not raw:
+        return {}
+    try:
+        return json.loads(raw.decode("utf-8"))
+    except json.JSONDecodeError as exc:
+        raise HTTPException(status_code=502, detail="Servo service returned non-JSON") from exc
 
 
 # =============================================================================
@@ -132,9 +214,26 @@ def _camera_service_request(method: str, path: str) -> dict[str, Any]:
 # =============================================================================
 
 
-@app.post("/front/servo/move/{direction}")
-async def front_servo_move(direction: str, body: ServoMoveRequest, _: str = Depends(require_session)):
-    return {"ok": True, "todo": "send servo move to master/servo service", "body": body.model_dump()}
+@app.post("/front/servo/move")
+@app.post("/servo/move")
+async def servo_move(body: ServoMoveRequest, _: str = Depends(require_session)):
+    if body.direction is not None:
+        try:
+            x, y = _DIR_TO_VEC[body.direction]
+        except KeyError:
+            raise HTTPException(status_code=400, detail="Invalid direction") from None
+    elif body.vector is not None:
+        x, y = float(body.vector[0]), float(body.vector[1])
+    else:
+        x = float(body.x or 0.0)
+        y = float(body.y or 0.0)
+
+    x = _clamp(x, -1.0, 1.0)
+    y = _clamp(y, -1.0, 1.0)
+
+    servo1 = _servo_service_request("POST", "/servo1/move", {"value": y, "step": body.step})
+    servo2 = _servo_service_request("POST", "/servo2/move", {"value": x, "step": body.step})
+    return {"ok": True, "servo1": servo1, "servo2": servo2}
 
 
 @app.post("/front/camera/start")
@@ -180,27 +279,6 @@ async def front_power_on(_: str = Depends(require_session)):
 @app.post("/front/power/off")
 async def front_power_off(_: str = Depends(require_session)):
     return {"ok": True, "todo": "power off system"}
-
-
-@app.post("/front/containers/{name}/start")
-async def front_container_start(
-    name: str, body: ContainerOptions | None = None, _: str = Depends(require_session)
-):
-    return {"ok": True, "todo": "start docker container", "name": name, "options": (body.options if body else {})}
-
-
-@app.post("/front/containers/{name}/stop")
-async def front_container_stop(
-    name: str, body: ContainerOptions | None = None, _: str = Depends(require_session)
-):
-    return {"ok": True, "todo": "stop docker container", "name": name, "options": (body.options if body else {})}
-
-
-@app.post("/front/containers/{name}/restart")
-async def front_container_restart(
-    name: str, body: ContainerOptions | None = None, _: str = Depends(require_session)
-):
-    return {"ok": True, "todo": "restart docker container", "name": name, "options": (body.options if body else {})}
 
 
 @app.post("/front/errors")
@@ -249,24 +327,30 @@ async def camera_health(_: str = Depends(require_session)):
 # =============================================================================
 
 
-@app.post("/servo/start")
-async def servo_start(_: str = Depends(require_session)):
-    return {"ok": True, "todo": "master->servo start"}
+class ServoAxisMoveRequest(BaseModel):
+    # For servo1: y (down=-1 .. up=+1)
+    # For servo2: x (left=-1 .. right=+1)
+    value: float = Field(..., ge=-1.0, le=1.0)
+    step: int = Field(default=5, ge=1, le=30)
 
 
-@app.post("/servo/stop")
-async def servo_stop(_: str = Depends(require_session)):
-    return {"ok": True, "todo": "master->servo stop"}
+@app.post("/servo1/move")
+@app.post("/front/servo1/move")
+async def servo1_move(body: ServoAxisMoveRequest, _: str = Depends(require_session)):
+    resp = _servo_service_request("POST", "/servo1/move", body.model_dump())
+    return {"ok": True, "servo": resp}
 
 
-@app.post("/servo/move/{direction}")
-async def servo_move(direction: str, body: ServoMoveRequest, _: str = Depends(require_session)):
-    return {"ok": True, "todo": "master->servo movement", "direction": direction, "body": body.model_dump()}
+@app.post("/servo2/move")
+@app.post("/front/servo2/move")
+async def servo2_move(body: ServoAxisMoveRequest, _: str = Depends(require_session)):
+    resp = _servo_service_request("POST", "/servo2/move", body.model_dump())
+    return {"ok": True, "servo": resp}
 
 
 @app.get("/servo/health")
 async def servo_health(_: str = Depends(require_session)):
-    return {"ok": True, "todo": "master->servo health check"}
+    return {"ok": True, **_servo_service_request("GET", "/status")}
 
 
 @app.get("/system-status")
