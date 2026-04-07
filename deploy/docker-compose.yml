@@ -1,0 +1,53 @@
+services:
+  # Purret backend API (cross-platform: uses port mapping)
+  api:
+    build:
+      # This compose file lives in `deploy/`, so the repo Backend is one level up.
+      # Override with: PURR_BACKEND_CONTEXT=/absolute/or/relative/path
+      context: ${PURR_BACKEND_CONTEXT:-../Backend}
+    container_name: purret_api
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+      # If you want to bind to a specific host IP (example):
+      # - "10.0.0.1:8000:8000"
+    environment:
+      PURR_BIND_HOST: "0.0.0.0"
+      PURR_BIND_PORT: "8000"
+      PURR_SERVO_DRIVER: "mock"
+
+  # Purret backend API (Linux-only: host networking; no ports:)
+  api-hostnet:
+    profiles: ["linux-hostnet"]
+    build:
+      context: ${PURR_BACKEND_CONTEXT:-../Backend}
+    container_name: purret_api_hostnet
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      PURR_BIND_HOST: "0.0.0.0"
+      PURR_BIND_PORT: "8000"
+      PURR_SERVO_DRIVER: "mock"
+
+  # MediaMTX (Linux-only: host networking)
+  mediamtx:
+    profiles: ["linux-video"]
+    image: bluenviron/mediamtx:latest
+    container_name: mediamtx
+    restart: unless-stopped
+    network_mode: "host"
+
+  # Camera/video container (Linux-only: host networking + /dev/video device)
+  video-container:
+    profiles: ["linux-video"]
+    build:
+      # Override with: VIDEO_CONTAINER_CONTEXT=/path/to/video_container
+      context: ${VIDEO_CONTAINER_CONTEXT:-/home/brother/video_container}
+    container_name: video-container-api
+    restart: unless-stopped
+    network_mode: "host"
+    devices:
+      - "${VIDEO_DEVICE:-/dev/video0}:/dev/video0"
+    volumes:
+      - "${RECORDINGS_DIR:-/mnt/usb}:/recordings"
+
