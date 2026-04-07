@@ -50,28 +50,31 @@ def servo_move(servo, angle):
     current_angle_servo2 = angle # updates the current angle for servo 2
     
     
-    
-def smooth_move(servo, angle, speed):
-  global current_angle_servo1, current_angle_servo2
-  if speed > 100 or speed < 1:
-    raise ValueError("Invalid speed provided")
+# -----------------------------------------------Scrapped Servo Speed move-----------------------------------------------------------------------
+#----------------------------------------Not needed due to speed already being changed on the front end
+#----------------------------------------Also this function was not working smoothly
+# def smooth_move(servo, angle, speed):
+#   global current_angle_servo1, current_angle_servo2
+#   if speed > 100 or speed < 1:
+#     raise ValueError("Invalid speed provided")
   
-  if servo == servo1:
-    if angle > 180 or 0 > angle: # same angle check for servo 1 with its range of movement
-      raise ValueError("Invalid angle provided for servo 1") # servo 1 cannot go below 10 degrees as the bar will get stuck on the base of the structure
-    for set_angle in range(current_angle_servo1, angle, ANGLE_INCREMENT):
-      pulse_us = MIN_PULSE + (set_angle/180) * (MAX_PULSE - MIN_PULSE)
-      raw_pulse(0, pulse_us)
-      time.sleep(1 - (speed / 100))
-      current_angle_servo1 = set_angle
-  else: 
-    if angle > 270 or angle < 0: # servo 2 has a different range of movement - this checks if valid angle
-      raise ValueError("Invalid angle provided for servo 2")
-    for set_angle in range(current_angle_servo2, angle, ANGLE_INCREMENT):
-      pulse_us = MIN_PULSE + (set_angle/270) * (MAX_PULSE - MIN_PULSE)
-      raw_pulse(1, pulse_us)
-      time.sleep(1 - (speed / 100))
-      current_angle_servo2 = set_angle
+#   if servo == servo1:
+#     if angle > 180 or 0 > angle: # same angle check for servo 1 with its range of movement
+#       raise ValueError("Invalid angle provided for servo 1") # servo 1 cannot go below 10 degrees as the bar will get stuck on the base of the structure
+#     step = ANGLE_INCREMENT if angle > current_angle_servo1 else -ANGLE_INCREMENT
+#     for  set_angle in range(int(current_angle_servo1), int(angle), step):
+#       pulse_us = MIN_PULSE + (set_angle/180) * (MAX_PULSE - MIN_PULSE)
+#       raw_pulse(0, pulse_us)
+#       time.sleep((1 - speed / 100) * 0.05) 
+#       current_angle_servo1 = set_angle
+#   else: 
+#     if angle > 270 or angle < 0: # servo 2 has a different range of movement - this checks if valid angle
+#       raise ValueError("Invalid angle provided for servo 2")
+#     for set_angle in range(current_angle_servo2, angle, ANGLE_INCREMENT):
+#       pulse_us = MIN_PULSE + (set_angle/270) * (MAX_PULSE - MIN_PULSE)
+#       raw_pulse(1, pulse_us)
+#       time.sleep((1 - speed / 100) * 0.05)
+#       current_angle_servo2 = set_angle
       
     
 def both_move(angle1, angle2):
@@ -79,7 +82,7 @@ def both_move(angle1, angle2):
   servo_move(servo2, angle2) #move second servo
   
 def reset_servos():
-  both_move(90, 90) # reset both servos to 90 degree position
+  both_move(90, 120) # reset both servos to face forward
   
 
 # ------------------------------------------LASER MODULE FUNCTIONS-----------------------------------------------------------------------
@@ -91,40 +94,40 @@ def led_off():
   led_channel.duty_cycle = 0x0000  # OFF
 
 def led_pwm(value):  
+  if(value > 1 or value < 0):
+    raise ValueError("Invalid value provided for laser brightness")
   # value: 0.0 → 1.0
   led_channel.duty_cycle = int(value * 0xFFFF)
 
 
 
 #-------------------------------------------TEST SERVO CODE-----------------------------------------------------
-# servo_move(servo1, 180) 
+# servo_move(servo1, 0) 
 # time.sleep(2) 
-# servo_move(servo1, 0)
-# time.sleep(2)
-# servo_move(servo2, 270)
+# servo_move(servo1, 90)
 # time.sleep(2)
 # servo_move(servo2, 0)
+# time.sleep(2)
+# servo_move(servo2, 120)
 
-
-smooth_move(servo1, 180, 50) # move servo 1 to 180 degrees at 50% speed
-time.sleep(2)
-smooth_move(servo1, 0, 50) # move servo 1 back to 0 degrees at 50% speed
-time.sleep(2)
-smooth_move(servo2, 270, 50) # move servo 2 to 270 degrees at 50% speed
-time.sleep(2)
-smooth_move(servo2, 0, 50) # move servo 2 back to 0 degrees at 50% speed
-time.sleep(2)
-
+if __name__ == "__main__":
+    smooth_move(servo1, 0, 100)
+    time.sleep(2)
+    smooth_move(servo1, 90, 100)
+    time.sleep(2)
+    smooth_move(servo2, 0, 100)
+    time.sleep(2)
+    smooth_move(servo2, 120, 100)
+    time.sleep(2)
+    # stops the signal the pca board for basic testing
+    PCA.deinit()
 #-------------------------------------------TEST LASER CODE-------------------------------------------------------
-led_on()
-time.sleep(1)
-led_off()
-time.sleep(1)
-led_pwm(0.1)  # 50% brightness
-time.sleep(1)
-led_pwm(1.0)  # full brightness
-time.sleep(1)
-led_off()
-
-# stops the signal the pca board
-PCA.deinit()
+# led_on()
+# time.sleep(2)
+# led_off()
+# time.sleep(2)
+# led_pwm(0.1)  # 50% brightness
+# time.sleep(2)
+# led_pwm(1.0)  # full brightness
+# time.sleep(2)
+# led_off()
