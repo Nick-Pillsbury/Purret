@@ -219,7 +219,7 @@ PersistentKeepalive = 25
 ---
 
 ## Installation Script
-Flash the Os with a hostname, wifi access, shh access, and a user / password. Then the installion script will auto download all dependecies for this project and setup wireguard tunnel.
+Flash the Os with a hostname, wifi access, shh access, and a user / password. Then the installion script will auto download all dependecies for this project and setup wireguard tunnel with 5 clients.
 Change local IP and interface for static IP if needed.
 ```bash
 chmod +x setup.sh
