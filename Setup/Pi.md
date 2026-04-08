@@ -25,7 +25,7 @@ The 64-bit version allows full utilization of the Raspberry Pi 5’s 8GB of RAM.
 
 ### Required Tools
 - Raspberry Pi Imager
-- MicroSD card (minimum 16GB recommended)
+- MicroSD card
 - MicroSD card reader
 - Raspberry Pi 5
 
@@ -78,6 +78,12 @@ A simple firewall to block uunwanted traffic.
 sudo apt install ufw -y
 sudo ufw allow 22/tcp        # SSH
 sudo ufw allow 51820/udp     # WireGuard
+sudo ufw allow 8000/tcp      # Master Api
+sudo ufw allow 8554/tcp      # RTSP
+sudo ufw allow 8888/tcp      # HLS
+sudo ufw allow 8443/tcp      # WebRTC
+sudo ufw allow 8889/tcp      # WebRTC
+sudo ufw allow 1935/tcp      # RMTP
 sudo ufw enable
 ```
 
@@ -95,8 +101,8 @@ sudo apt install curl -y
 ### Docker
 ```bash
 curl -fsSL https://get.docker.com | sh
-sudo usermod -aG docker $USER
 sudo apt install docker-compose-plugin -y
+sudo usermod -aG docker $USER
 sudo reboot
 docker run hello-world
 ```
@@ -109,6 +115,11 @@ sudo apt install wireguard -y
 ### I2C
 ```bash
 sudo apt install i2c-tools libi2c-dev -y
+```
+
+### lsblk
+```bash
+sudo apt install util-linux -y
 ```
 
 ---
@@ -252,11 +263,27 @@ sudo i2cset -y 1 0x40 0x00 0x20
 
 ## Manually Set IP
 Force your server to use x local ip. Wifi is already set up, so it will reuse everything else.
-Do Not manually set it if you are fixing an ip to this server on router. One or other.
+Do Not manually set it if you are fixing an ip to this server on your router. One or the other.
 ```bash
 nmcli connection show
 
 sudo nmcli connection modify "WiFi Name" \
-ipv4.addresses X \
+ipv4.addresses xxx.xxx.xxx.xxx \
 ipv4.method manual
+```
+
+---
+
+## Using a External Hard Drive
+```bash
+// check name of drive and partitions
+lsblk
+// Make a folder to link to thumb drive
+sudo mkdir -p /mnt/usb
+// Link drive content to folder
+sudo mount /dev/sda1 /mnt/usb
+// Unlink drive from folder to take out
+sudo umount /mnt/usb
+// Kill any procces if you can't unlink
+sudo lsof /mnt/usb
 ```

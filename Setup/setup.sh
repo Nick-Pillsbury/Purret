@@ -10,6 +10,7 @@ echo "Installing tools"
 sudo apt install -y curl htop ufw wireguard
 sudo apt update && sudo apt upgrade -y
 sudo apt install i2c-tools -y
+sudo apt install util-linux -y
 
 
 echo "Installing Docker"
@@ -32,6 +33,12 @@ sudo sysctl --system
 echo "Setting up UFW"
 sudo ufw allow 22/tcp
 sudo ufw allow 51820/udp
+sudo ufw allow 8000/tcp
+sudo ufw allow 8554/tcp
+sudo ufw allow 8888/tcp
+sudo ufw allow 8443/tcp
+sudo ufw allow 8889/tcp
+sudo ufw allow 1935/tcp
 sudo ufw --force enable
 
 
