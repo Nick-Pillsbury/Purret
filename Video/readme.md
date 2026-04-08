@@ -3,11 +3,8 @@ This document outlines the tools, design decisions, configuration, and architect
 
 ---
 
-## Hardware Requirements
-This container is designed to run on:
-- Raspberry Pi 5 (8GB)
-- USB Webcam (`/dev/video0`)
-- USB 3.0 External Storage (for recordings)
+## Overview
+This container runs a FastAPI-based video service that manages live streaming and recording using FFmpeg. It captures video from a local device, streams it over RTSP, and allows recordings of that stream to be saved to persistent storage. The API provides endpoints to start/stop streaming, start/stop recording, and check system status. It also ensures safe operation by preventing the stream from stopping while a recording is in progress.
 
 ---
 
@@ -17,46 +14,41 @@ This container is responsible for:
 - Capturing video from a USB webcam
 - Encoding video using H.264
 - Streaming video via RTSP
-- Optionally recording video to external storage
+- Recording video to external storage
 
 ---
 
 ## Tools and Technology Stack
 
 ### 1. Python FastAPI
-FastAPI was selected due to its ease of use and high compatibility.
-**Benefits:**
+FastAPI was selected due to its ease of use and high compatibility. It's best for:
 - Compatibility across clients and platforms
 - Ease of development and maintenance
 - Well-maintained and fast framework
 
 ### 2. FFmpeg
 FFmpeg was selected for video processing and streaming because it provides:
-- Reliable H.264 encoding support  
+- H.264 encoding support  
 - Low-latency streaming capabilities  
-- Hardware acceleration support on Raspberry Pi  
-- Stable and production-proven multimedia handling  
+- Well know tool for capturing and streaming via mutiple different protocols
 
 ### 3. MediaMTX
 MediaMTX was selected as the streaming server because of:
 - Compatibility with RTSP/HLS/WebRTC clients
 - Low resource usage
-- Ability to ingest RTSP from the Pi and redistribute to multiple clients
+- Ability to ingest RTSP from the Pi and redistribute to multiple clients at once and over many protocols
 
 ### 4. RTSP (Real-Time Streaming Protocol)
 RTSP was chosen as the streaming protocol because:
 - Designed for low-latency streaming
 - More efficient than HTTP-based streaming for real-time use
-- Works seamlessly with H.264 compression
-
+- Works better with H.264 compression
 **Default streaming port:** `8554`
 
 ### 5. H.264 Compression
 H.264 was selected due to:
-- Hardware acceleration support on Raspberry Pi 5  
 - High compression efficiency
 - Low bandwidth usage
-- Broad compatibility with clients
 
 ---
 
@@ -70,7 +62,7 @@ Docker was selected for containerization because it provides:
 
 ---
 
-## Container Architecture
+## Stream Architecture
 ```plaintext
     USB Webcam (/dev/video0)
             ↓
@@ -82,20 +74,16 @@ Docker was selected for containerization because it provides:
          ↓            ↓
   WireGuard Tunnel   Local Unity Client
          ↓
-    Remote Unity Client
+Remote Unity Client
 ```
 
 ---
 
 ## Video Storage
-Recording is:
-- Optional
-- Not continuous
 An external USB 3.0 thumb drive was used because:
 - Short recording sessions
-- Low sustained write duration
-- Not 24/7 usage
 - Super Cheap
+- Better reading and writing lifespan (Preserve mirco sd card)
 
 ---
 
@@ -113,13 +101,6 @@ An external USB 3.0 thumb drive was used because:
    > List containers
    > ```
    >docker ps
-   >```
-   >
-   > Persistant Storage
-   > ```
-   >docker volume ls
-   >docker volume create mydata
-   >docker volume rm mydata
    >```
    >
    > Compose

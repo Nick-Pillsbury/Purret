@@ -1,95 +1,85 @@
 import os
 import signal
 import subprocess
-from datetime import datetime
 from fastapi import FastAPI
-
-'''
-v4l2-ctl --list-formats-ext - check camera outputs and frame rate
-
-
-ffmpeg
--f v4l2                        - Video4Linux2, usb webs ect
--input_format mjpeg            - input foramt of frames from camera
--framerate 30                  - framerate to push / pull from camera
--video_size 1280x720           - resolution
--i /dev/video0                 - camera input
--c:v copy                      - copy exact frame from camer no recoding
--c:v libx264                   - encode to H.264
--preset ultrafast              - stream speed
--tune zerolatency              - stream speed
--f flv                         - format output for flash video conatiner standard for rtmp
-rtmp://localhost:1935/mystream - push a rtmp stream to port 1935 preset rtmp in for media server
-
-// mjpeg example with encoding
-ffmpeg -f v4l2 -input_format mjpeg -framerate 30 -video_size 1280x720 -i /dev/video0 \
-       -c:v libx264 -preset ultrafast -tune zerolatency -f flv rtmp://localhost:1935/stream
-
-// h264 camera output example no encoding
-ffmpeg -f v4l2 -input_format h264 -framerate 30 -video_size 1920x1080 -i /dev/video0 \
-       -c copy -tune zerolatency -preset ultrafast -f flv rtmp://localhost:1935/stream
-
-'''
-import os
-import signal
-import subprocess
 from datetime import datetime
-from fastapi import FastAPI
 
+
+# Globals
 app = FastAPI()
-
-# Track running processes
 ffmpeg_process = None
 recording_process = None
+recordings_dir = "/recordings" # /recordings in docker will be linked to /mnt/usb on host for persistent storage
+# recordings_dir = "/mnt/usb"  # local testing
 
-# Container path
-recordings_dir = "/recordings"
 
-
-# ---------- STREAM ----------
+# Stream Start
+# Start a ffmeg process to:
+    # capture video from /dev/video0
+    # encode it with h264
+    # stream it with rtsp to media server on localhost:8554
 @app.post("/stream/start")
 def start_stream():
     global ffmpeg_process
 
     if ffmpeg_process is not None:
         return {"status": "stream already running"}
-
-    ffmpeg_cmd = [
+    
+    cmd = [
         "ffmpeg",
         "-f", "v4l2",
-        "-input_format", "h264",
+        "-input_format", "mjpeg",
+        "-video_size", "1280x720",
         "-framerate", "30",
-        "-video_size", "1920x1080",
         "-i", "/dev/video0",
-        "-c", "copy",
+        "-an",
+        "-c:v", "libx264",
         "-preset", "ultrafast",
         "-tune", "zerolatency",
-        "-f", "flv",
-        "rtmp://localhost:1935/stream"
+        "-pix_fmt", "yuv420p",
+        "-fflags", "nobuffer",
+        "-flags", "low_delay",
+        "-f", "rtsp",
+        "-rtsp_transport", "tcp",
+        "rtsp://127.0.0.1:8554/stream"
     ]
+    
+    try:
+        ffmpeg_process = subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        return {"status": "stream started"}
+    except Exception as e:
+        ffmpeg_process = None
+        return {"status": "error", "error-message": str(e)}
 
-    ffmpeg_process = subprocess.Popen(ffmpeg_cmd)
-    return {"status": "stream started", "pid": ffmpeg_process.pid}
 
-
+# Stream Stop
+# End the ffmpeg process that is streaming to rtsp server. 
+# If recording is active, do not stop stream until recording is stopped first. 
+    # Ending stream while recording will error out the recording process and corrupt the recording file.
 @app.post("/stream/stop")
 def stop_stream():
     global ffmpeg_process
 
     if ffmpeg_process is None:
         return {"status": "stream not running"}
-    
     if recording_process is not None:
         return {"status": "stop recording before stopping stream"}
-
-    ffmpeg_process.send_signal(signal.SIGINT)
-    ffmpeg_process.wait()
-    ffmpeg_process = None
-
+    
+    try:
+        ffmpeg_process.terminate()
+        ffmpeg_process.wait(timeout=5)
+    except Exception:
+        ffmpeg_process.kill()
+    finally:
+        ffmpeg_process = None
+    
     return {"status": "stream stopped"}
 
 
-# ---------- RECORDING ----------
+# Recording Start
+# Start a ffmpeg process to:
+    # Capture video from rtsp stream on localhost:8554
+    # Save it to a file in /recordings with unique filename
 @app.post("/recording/start")
 def start_recording():
     global recording_process
@@ -97,26 +87,33 @@ def start_recording():
     if recording_process is not None:
         return {"status": "recording already running"}
 
-    os.makedirs(recordings_dir, exist_ok=True)
+    if ffmpeg_process is None:
+        return {"status": "stream not running"}
 
+    os.makedirs(recordings_dir, exist_ok=True)
     filename = os.path.join(
         recordings_dir,
         f"recording_{datetime.now().strftime('%Y%m%d_%H%M%S')}.mp4"
     )
 
-    record_cmd = [
+    cmd = [
         "ffmpeg",
         "-rtsp_transport", "tcp",
-        "-i", "rtsp://localhost:8554/stream",
-        "-c", "copy",
+        "-i", "rtsp://127.0.0.1:8554/stream",
+        "-c:v", "copy",
         filename
     ]
 
-    recording_process = subprocess.Popen(record_cmd)
+    try:
+        recording_process = subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        return {"status": "recording started", "file": filename}
+    except Exception as e:
+        recording_process = None
+        return {"status": "error", "message": str(e)}
 
-    return {"status": "recording started", "file": filename}
 
-
+# Recording Stop
+# End the ffmpeg process that is recording the rtsp stream.
 @app.post("/recording/stop")
 def stop_recording():
     global recording_process
@@ -124,14 +121,19 @@ def stop_recording():
     if recording_process is None:
         return {"status": "recording not running"}
 
-    recording_process.send_signal(signal.SIGINT)
-    recording_process.wait()
-    recording_process = None
+    try:
+        recording_process.send_signal(signal.SIGINT)
+        recording_process.wait(timeout=5)
+    except Exception:
+        recording_process.kill()
+    finally:
+        recording_process = None
 
     return {"status": "recording stopped"}
 
 
-# ---------- STATUS ----------
+# Status
+    # Return status of stream and recording processes.
 @app.get("/status")
 def status():
     return {

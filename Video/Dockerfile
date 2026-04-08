@@ -1,19 +1,15 @@
 FROM python:3.14.3-slim
 
-# Install ffmpeg + v4l2 tools
-RUN apt-get update && apt-get install -y
-RUN apt-get install -y ffmpeg v4l-utils
+# Update and install v4l2 tools and ffmpeg
+RUN apt-get update && apt-get install v4l-utils ffmpeg -y
 
-# Set working directory
 WORKDIR /app
-
-# Copy app files
 COPY . /app
 
 # Install Python deps
 RUN pip install --no-cache-dir fastapi uvicorn
 
-# Create recordings dir inside container
+# Create recordings dir inside container, with will link to another location
 RUN mkdir -p /recordings
 
 # Expose API port
