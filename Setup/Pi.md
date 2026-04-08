@@ -25,7 +25,7 @@ The 64-bit version allows full utilization of the Raspberry Pi 5’s 8GB of RAM.
 
 ### Required Tools
 - Raspberry Pi Imager
-- MicroSD card (minimum 16GB recommended)
+- MicroSD card
 - MicroSD card reader
 - Raspberry Pi 5
 
@@ -78,6 +78,12 @@ A simple firewall to block uunwanted traffic.
 sudo apt install ufw -y
 sudo ufw allow 22/tcp        # SSH
 sudo ufw allow 51820/udp     # WireGuard
+sudo ufw allow 8000/tcp      # Master Api
+sudo ufw allow 8554/tcp      # RTSP
+sudo ufw allow 8888/tcp      # HLS
+sudo ufw allow 8443/tcp      # WebRTC
+sudo ufw allow 8889/tcp      # WebRTC
+sudo ufw allow 1935/tcp      # RMTP
 sudo ufw enable
 ```
 
@@ -95,8 +101,8 @@ sudo apt install curl -y
 ### Docker
 ```bash
 curl -fsSL https://get.docker.com | sh
-sudo usermod -aG docker $USER
 sudo apt install docker-compose-plugin -y
+sudo usermod -aG docker $USER
 sudo reboot
 docker run hello-world
 ```
@@ -106,6 +112,15 @@ docker run hello-world
 sudo apt install wireguard -y
 ```
 
+### I2C
+```bash
+sudo apt install i2c-tools libi2c-dev -y
+```
+
+### lsblk
+```bash
+sudo apt install util-linux -y
+```
 
 ---
 
@@ -145,9 +160,6 @@ WireGuard is used to create a secure, VPN tunnel between the Raspberry Pi / loca
    PrivateKey = <SERVER_PRIVATE_KEY>
    Address = 10.0.0.1/24
    ListenPort = 51820
-
-   PostUp = iptables -A FORWARD -i wg0 -j ACCEPT; iptables -A FORWARD -o wg0 -j ACCEPT; iptables -t nat -A POSTROUTING -o wlan0 -j MASQUERADE
-   PostDown = iptables -D FORWARD -i wg0 -j ACCEPT; iptables -D FORWARD -o wg0 -j ACCEPT; iptables -t nat -D POSTROUTING -o wlan0 -j MASQUERADE
 
    # Client 1
    [Peer]
@@ -214,11 +226,64 @@ PersistentKeepalive = 25
    > Show Interface Details
    > ```ip a show wg0```
 
+
 ---
 
-## Installation Scripts
-Flash the Os with a hostname, wifi access, shh access, and a user / password. Then the installion script will auto download all dependecies for this project and setup wireguard tunnel.
+## Installation Script
+Flash the Os with a hostname, wifi access, shh access, and a user / password. Then the installion script will auto download all dependecies for this project and setup wireguard tunnel with 5 clients.
+Change local IP and interface for static IP if needed.
 ```bash
 chmod +x setup.sh
 ./setup.sh
+```
+
+---
+
+## I^2C Enable
+```bash
+sudo raspi-config
+Interface Options → I2C → Enable
+sudo reboot
+```
+
+
+## PCA Driver Board Frequency
+Make sure to setup the wiring before. You can check that the PCA board is connected with:
+```bash
+i2cdetect -y 1
+```
+We need to set the pwm freqency within the board from whatever the default is to 50hz. 
+```bash
+sudo i2cset -y 1 0x40 0x00 0x10
+sudo i2cset -y 1 0x40 0xFE 0x79
+sudo i2cset -y 1 0x40 0x00 0x20
+```
+
+---
+
+## Manually Set IP
+Force your server to use x local ip. Wifi is already set up, so it will reuse everything else.
+Do Not manually set it if you are fixing an ip to this server on your router. One or the other.
+```bash
+nmcli connection show
+
+sudo nmcli connection modify "WiFi Name" \
+ipv4.addresses xxx.xxx.xxx.xxx \
+ipv4.method manual
+```
+
+---
+
+## Using a External Hard Drive
+```bash
+// check name of drive and partitions
+lsblk
+// Make a folder to link to thumb drive
+sudo mkdir -p /mnt/usb
+// Link drive content to folder
+sudo mount /dev/sda1 /mnt/usb
+// Unlink drive from folder to take out
+sudo umount /mnt/usb
+// Kill any procces if you can't unlink
+sudo lsof /mnt/usb
 ```

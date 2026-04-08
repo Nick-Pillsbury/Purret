@@ -9,6 +9,8 @@ sudo apt update && sudo apt upgrade -y
 echo "Installing tools"
 sudo apt install -y curl htop ufw wireguard
 sudo apt update && sudo apt upgrade -y
+sudo apt install i2c-tools -y
+sudo apt install util-linux -y
 
 
 echo "Installing Docker"
@@ -31,6 +33,12 @@ sudo sysctl --system
 echo "Setting up UFW"
 sudo ufw allow 22/tcp
 sudo ufw allow 51820/udp
+sudo ufw allow 8000/tcp
+sudo ufw allow 8554/tcp
+sudo ufw allow 8888/tcp
+sudo ufw allow 8443/tcp
+sudo ufw allow 8889/tcp
+sudo ufw allow 1935/tcp
 sudo ufw --force enable
 
 
@@ -78,10 +86,6 @@ sudo tee /etc/wireguard/wg0.conf > /dev/null <<EOF
 PrivateKey = $SERVER_PRIVATE_KEY
 Address = 10.0.0.1/24
 ListenPort = 51820
-
-# Enable routing + NAT (wifi = wlan0)
-PostUp = iptables -A FORWARD -i wg0 -j ACCEPT; iptables -A FORWARD -o wg0 -j ACCEPT; iptables -t nat -A POSTROUTING -o wlan0 -j MASQUERADE
-PostDown = iptables -D FORWARD -i wg0 -j ACCEPT; iptables -D FORWARD -o wg0 -j ACCEPT; iptables -t nat -D POSTROUTING -o wlan0 -j MASQUERADE
 
 # Client 1
 [Peer]
@@ -200,9 +204,6 @@ PersistentKeepalive = 25
 EOF
 
 echo "Client configs created in ~/client-configs/"
-
-
-
 
 echo "Done! rebooting!"
 sudo reboot
