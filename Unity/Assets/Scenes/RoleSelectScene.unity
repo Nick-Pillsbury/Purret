@@ -723,8 +723,8 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 1925838653}
         m_TargetAssemblyTypeName: RoleManagerScript, Assembly-CSharp
-        m_MethodName: LoadPlayerScene
-        m_Mode: 1
+        m_MethodName: TryRole
+        m_Mode: 5
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
@@ -1447,8 +1447,8 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 1925838653}
         m_TargetAssemblyTypeName: RoleManagerScript, Assembly-CSharp
-        m_MethodName: LoadSpectatorScene
-        m_Mode: 1
+        m_MethodName: TryRole
+        m_Mode: 5
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
