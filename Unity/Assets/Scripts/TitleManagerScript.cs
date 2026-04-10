@@ -56,6 +56,7 @@ public class TitleManagerScript : MonoBehaviour
         if (p.time >= 0)
         {
             Debug.Log("Successfully connected to Purret!");
+            ChatClient.playerName = username;
             SceneManager.LoadScene("RoleSelectScene");
             // Load the next scene or perform any necessary actions
         } else
