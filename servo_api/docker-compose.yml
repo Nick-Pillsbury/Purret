@@ -1,0 +1,12 @@
+services:
+    servo-api:
+        build: 
+            context: .
+        container_name: servo-api-container
+        image: servo-api-image
+        network_mode: "host"
+        restart: unless-stopped
+        privileged: true
+        devices:
+            - /dev/i2c-1:/dev/i2c-1
+            - /dev/gpiomem:/dev/gpiomem
