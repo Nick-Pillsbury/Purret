@@ -7,7 +7,7 @@ using Unity.WebRTC;
 
 public class MediaMtxWhepReceiver : MonoBehaviour
 {
-    [SerializeField] public string whepUrl = "http://192.168.1.245:8889/stream/whep";
+    [SerializeField] public string whepUrl = "http://10.0.0.1:8889/stream/whep";
     [SerializeField] private RawImage targetImage;
     [SerializeField] private float retryDelaySeconds = 2f;
 
@@ -116,7 +116,7 @@ public class MediaMtxWhepReceiver : MonoBehaviour
 
         var transceiverInit = new RTCRtpTransceiverInit
         {
-            direction = RTCRtpTransceiverDirection.RecvOnly
+            direction = RTCRtpTransceiverDirection.SendRecv
         };
 
         peer.AddTransceiver(TrackKind.Video, transceiverInit);
@@ -169,7 +169,7 @@ public class MediaMtxWhepReceiver : MonoBehaviour
                 type = RTCSdpType.Answer,
                 sdp = req.downloadHandler.text
             };
-
+            Debug.Log("Remote SDP:\n" + req.downloadHandler.text);
             var setRemoteOp = peer.SetRemoteDescription(ref answerDesc);
             yield return setRemoteOp;
 
