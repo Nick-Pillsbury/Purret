@@ -1,0 +1,29 @@
+FROM python:3.14.3-slim
+
+WORKDIR /app
+
+# Install deps
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    python3-dev \
+    swig \
+    i2c-tools \
+    git \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN git clone https://github.com/joan2937/lg.git /tmp/lg
+RUN cd /tmp/lg && \
+    make && \
+    make install && \
+    ldconfig
+    
+COPY api.py .
+COPY servo_control.py .
+COPY requirements.txt .
+
+RUN pip install --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt
+
+EXPOSE 8002
+
+CMD ["uvicorn", "api:app", "--host", "0.0.0.0", "--port", "8002"]
