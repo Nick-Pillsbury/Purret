@@ -1,0 +1,8 @@
+services:
+  api:
+    build:
+      context: .
+    container_name: master-api-container
+    image: master-api-image
+    restart: unless-stopped
+    network_mode: "host"
