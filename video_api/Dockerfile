@@ -4,16 +4,14 @@ FROM python:3.14.3-slim
 RUN apt-get update && apt-get install v4l-utils ffmpeg -y
 
 WORKDIR /app
-COPY . /app
+COPY main.py .
+COPY requirements.txt .
 
-# Install Python deps
-RUN pip install --no-cache-dir fastapi uvicorn
+RUN pip install --upgrade pip && pip install --no-cache-dir -r requirements.txt
 
 # Create recordings dir inside container, with will link to another location
 RUN mkdir -p /recordings
 
-# Expose API port
 EXPOSE 8001
 
-# Start FastAPI
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8001"]

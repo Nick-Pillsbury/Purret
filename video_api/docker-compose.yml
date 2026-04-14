@@ -1,18 +1,20 @@
-version: "3.9"
-
 services:
   mediamtx:
     image: bluenviron/mediamtx:latest
-    container_name: mediamtx
+    container_name: mediamtx-container
     restart: unless-stopped
     network_mode: "host"
 
-  video-container:
+  video-api:
     build:
-      context: /home/brother/video_container
-    container_name: video-container-api
+      context: .
+    image: video-api-image
+    container_name: video-api-container
     restart: unless-stopped
     network_mode: "host"
+    cpus: 0
+    mem_limit: 0
+    privileged: true
     devices:
       - "/dev/video0:/dev/video0"
     volumes:
