@@ -214,9 +214,22 @@ def _camera_service_request(method: str, path: str) -> dict[str, Any]:
 # =============================================================================
 
 
+@app.post("front/servo/reset")
+async def servo_reset(_: str = Depends(require_session)):
+    global servo1angle, servo2angle
+    servo1angle = 90.0
+    servo2angle = 90.0
+    servo1 = _servo_service_request("POST", "/servo1/move", {"angle": servo1angle})
+    servo2 = _servo_service_request("POST", "/servo2/move", {"angle": servo2angle})
+    return {"ok": True}
+
+
+
 @app.post("/front/servo/move")
 @app.post("/servo/move")
 async def servo_move(body: ServoMoveRequest, _: str = Depends(require_session)):
+    global servo1angle, servo2angle
+
     if body.direction is not None:
         try:
             x, y = _DIR_TO_VEC[body.direction]
@@ -230,9 +243,13 @@ async def servo_move(body: ServoMoveRequest, _: str = Depends(require_session)):
 
     x = _clamp(x, -1.0, 1.0)
     y = _clamp(y, -1.0, 1.0)
+    servo1angle += y * body.step
+    servo2angle -= x * body.step
 
-    servo1 = _servo_service_request("POST", "/servo1/move", {"value": y, "step": body.step})
-    servo2 = _servo_service_request("POST", "/servo2/move", {"value": x, "step": body.step})
+    # servo1 = _servo_service_request("POST", "/servo1/move", {"value": y, "step": body.step})
+    # servo2 = _servo_service_request("POST", "/servo2/move", {"value": x, "step": body.step})
+    servo1 = _servo_service_request("POST", "/servo1/move", {"angle": servo1angle})
+    servo2 = _servo_service_request("POST", "/servo2/move", {"angle": servo2angle})
     return {"ok": True, "servo1": servo1, "servo2": servo2}
 
 
@@ -330,8 +347,7 @@ async def camera_health(_: str = Depends(require_session)):
 class ServoAxisMoveRequest(BaseModel):
     # For servo1: y (down=-1 .. up=+1)
     # For servo2: x (left=-1 .. right=+1)
-    value: float = Field(..., ge=-1.0, le=1.0)
-    step: int = Field(default=5, ge=1, le=30)
+    angle: float = Field(..., ge=0.0, le=180.0)
 
 
 @app.post("/servo1/move")
@@ -356,11 +372,3 @@ async def servo_health(_: str = Depends(require_session)):
 @app.get("/system-status")
 async def system_status():
     return {"session_active": active_token is not None}
-
-
-if __name__ == "__main__":
-    import uvicorn
-
-    host = os.getenv("PURR_BIND_HOST", "0.0.0.0")
-    port = int(os.getenv("PURR_BIND_PORT", "8000"))
-    uvicorn.run("main:app", host=host, port=port, reload=False, proxy_headers=True)
