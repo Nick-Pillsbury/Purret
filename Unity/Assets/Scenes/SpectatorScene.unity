@@ -1754,7 +1754,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cb417a24aa4234f0797cff7dc51611d2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MediaMtxWhepReceiver
-  whepUrl: http://192.168.1.245:8889/stream/whep
+  whepUrl: http://10.0.0.1:8889/stream/whep
   targetImage: {fileID: 1313157228}
   retryDelaySeconds: 2
 --- !u!1 &1554377600
