@@ -1,21 +1,13 @@
-FROM python:3.11-slim
+FROM python:3.14.3-slim
 
 WORKDIR /app
 
-# (Optional but common) Needed for video pipelines / future camera features.
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends ffmpeg \
-    && rm -rf /var/lib/apt/lists/*
-
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+COPY chat.py .
+COPY main.py .
 
-COPY . .
+RUN  pip install --upgrade pip && pip install --no-cache-dir -r requirements.txt
 
 EXPOSE 8000
 
-ENV PURR_BIND_HOST=0.0.0.0 \
-    PURR_BIND_PORT=8000
-
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--proxy-headers"]
-
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]

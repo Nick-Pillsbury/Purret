@@ -1,20 +1,8 @@
 services:
   api:
     build:
-      context: ./Backend
-    container_name: purret_api
+      context: .
+    container_name: master-api-container
+    image: master-api-image
     restart: unless-stopped
-
-    # Cross-platform default (Windows/macOS/Linux)
-    ports:
-      - "8000:8000"
-      # If you want to bind to a specific host IP (example):
-      # - "10.0.0.1:8000:8000"
-
-    # Linux-only alternative (uncomment to use host networking):
-    # network_mode: host
-
-    environment:
-      PURR_BIND_HOST: "0.0.0.0"
-      PURR_BIND_PORT: "8000"
-      PURR_SERVO_DRIVER: "mock"
+    network_mode: "host"

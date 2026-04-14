@@ -10,20 +10,22 @@ from typing import Any, Dict, Literal, Optional
 from fastapi import Depends, FastAPI, HTTPException
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import BaseModel, Field
+from fastapi import FastAPI
+from chat import router as chat_router
 
-app = FastAPI(title="Purret Control API (Skeleton)")
 
-#
-# NOTE
+
+app = FastAPI(title="Purret Control API")
+app.include_router(chat_router)
+
+# To run locally
 #
 # PURR_BIND_HOST=10.0.0.1 PURR_BIND_PORT=8000 python main.py
 #
 # curl -X POST http://10.0.0.1:8000/login
 # curl -X POST http://10.0.0.1:8000/logout -H "Authorization: Bearer $TOKEN"
-#
 
 
-# --- Minimal auth: single-user lock (only one username logged in at a time) ---
 security = HTTPBearer()
 active_token: str | None = None
 
@@ -118,8 +120,11 @@ _DIR_TO_VEC: dict[str, tuple[float, float]] = {
     "stop": (0.0, 0.0),
 }
 
+global servo1angle, servo2angle
+servo1angle = 90
+servo2angle = 90
+
 def _servo_service_base_url() -> str:
-    # Example: http://127.0.0.1:8002
     return os.getenv("PURR_SERVO_SERVICE_URL", "http://127.0.0.1:8002").rstrip("/")
 
 
@@ -208,11 +213,8 @@ def _camera_service_request(method: str, path: str) -> dict[str, Any]:
 # - Camera
 # - Laser
 # - Power on/off
-# - Starting/Stopping containers
-# - Passing up errors
 # - (record user id and only allow user) -> enforced via require_session
 # =============================================================================
-
 
 @app.post("front/servo/reset")
 async def servo_reset(_: str = Depends(require_session)):
@@ -246,8 +248,7 @@ async def servo_move(body: ServoMoveRequest, _: str = Depends(require_session)):
     servo1angle += y * body.step
     servo2angle -= x * body.step
 
-    # servo1 = _servo_service_request("POST", "/servo1/move", {"value": y, "step": body.step})
-    # servo2 = _servo_service_request("POST", "/servo2/move", {"value": x, "step": body.step})
+
     servo1 = _servo_service_request("POST", "/servo1/move", {"angle": servo1angle})
     servo2 = _servo_service_request("POST", "/servo2/move", {"angle": servo2angle})
     return {"ok": True, "servo1": servo1, "servo2": servo2}
@@ -280,27 +281,14 @@ async def front_camera_health(_: str = Depends(require_session)):
 
 @app.post("/front/laser/on")
 async def front_laser_on(_: str = Depends(require_session)):
-    return {"ok": True, "todo": "turn laser on"}
+    resp = _servo_service_request("POST", "/laser/on")
+    return {"ok": True, **resp}
 
 
 @app.post("/front/laser/off")
 async def front_laser_off(_: str = Depends(require_session)):
-    return {"ok": True, "todo": "turn laser off"}
-
-
-@app.post("/front/power/on")
-async def front_power_on(_: str = Depends(require_session)):
-    return {"ok": True, "todo": "power on system"}
-
-
-@app.post("/front/power/off")
-async def front_power_off(_: str = Depends(require_session)):
-    return {"ok": True, "todo": "power off system"}
-
-
-@app.post("/front/errors")
-async def front_report_error(body: ErrorReport, _: str = Depends(require_session)):
-    return {"ok": True, "todo": "persist/forward errors", "error": body.model_dump()}
+    resp = _servo_service_request("POST", "/laser/off")
+    return {"ok": True, **resp}
 
 
 # =============================================================================
