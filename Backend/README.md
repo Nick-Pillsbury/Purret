@@ -44,6 +44,12 @@ Open the interactive docs:
 http://127.0.0.1:8000/docs
 ```
 
+Run the backend tests from the repo root:
+
+```bash
+python -m unittest discover -s Backend/Testing -p "test.py"
+```
+
 ## Run With Docker
 
 Build and run from the `Backend` directory:
