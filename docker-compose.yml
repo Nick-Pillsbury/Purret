@@ -1,0 +1,45 @@
+
+services:
+
+    master-api:
+        build:
+            context: ./master_api
+        image: master-api-image
+        container_name: master-api-container
+        restart: unless-stopped
+        network_mode: "host"
+
+    mediamtx:
+        image: bluenviron/mediamtx:latest
+        container_name: mediamtx-container
+        restart: unless-stopped
+        network_mode: "host"
+
+    video-api:
+        build:
+            context: ./video_api
+        image: video-api-image
+        container_name: video-api-container
+        cpus: 0
+        mem_limit: 0
+        restart: unless-stopped
+        network_mode: "host"
+        privileged: true
+        depends_on:
+            - mediamtx
+        devices:
+            - "/dev/video0:/dev/video0"
+        volumes:
+            - /mnt/usb:/recordings
+
+    servo-api:
+        build: 
+            context: ./servo_api
+        image: servo-api-image
+        container_name: servo-api-container
+        network_mode: "host"
+        restart: unless-stopped
+        privileged: true
+        devices:
+            - /dev/i2c-1:/dev/i2c-1
+            - /dev/gpiomem:/dev/gpiomem
