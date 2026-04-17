@@ -108,4 +108,10 @@ public class GameManagerScript : MonoBehaviour
         UnityEngine.SceneManagement.SceneManager.LoadScene("MainMenu");
     }
 
+    private void OnApplicationQuit()
+    {
+        StartCoroutine(StopVideoFeed("player"));
+        StartCoroutine(Logout("player"));
+    }
+
 }

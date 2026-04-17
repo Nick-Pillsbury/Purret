@@ -4,10 +4,11 @@ using UnityEngine;
 using UnityEngine.Networking;
 using UnityEngine.UI;
 using Unity.WebRTC;
+using System.Linq;
 
 public class MediaMtxWhepReceiver : MonoBehaviour
 {
-    [SerializeField] public string whepUrl = "http://192.168.1.245:8889/stream/whep";
+    [SerializeField] public string whepUrl = "http://10.0.0.1:8889/stream/whep";
     [SerializeField] private RawImage targetImage;
     [SerializeField] private float retryDelaySeconds = 2f;
 
@@ -116,10 +117,20 @@ public class MediaMtxWhepReceiver : MonoBehaviour
 
         var transceiverInit = new RTCRtpTransceiverInit
         {
-            direction = RTCRtpTransceiverDirection.RecvOnly
+            direction = RTCRtpTransceiverDirection.SendRecv
         };
 
         peer.AddTransceiver(TrackKind.Video, transceiverInit);
+
+        var transceiver = peer.AddTransceiver(TrackKind.Video, transceiverInit);
+
+        var h264Codec = RTCRtpReceiver.GetCapabilities(TrackKind.Video).codecs
+            .Where(c => c.mimeType == "video/H264")
+            .ToArray();
+
+        transceiver.SetCodecPreferences(h264Codec);
+
+        
 
         var offerOp = peer.CreateOffer();
         yield return offerOp;
@@ -148,6 +159,7 @@ public class MediaMtxWhepReceiver : MonoBehaviour
             yield break;
 
         string localSdp = peer.LocalDescription.sdp;
+        Debug.Log("Local SDP:\n" + localSdp);
 
         using (var req = new UnityWebRequest(whepUrl, UnityWebRequest.kHttpVerbPOST))
         {
@@ -169,7 +181,7 @@ public class MediaMtxWhepReceiver : MonoBehaviour
                 type = RTCSdpType.Answer,
                 sdp = req.downloadHandler.text
             };
-
+            Debug.Log("Remote SDP:\n" + req.downloadHandler.text);
             var setRemoteOp = peer.SetRemoteDescription(ref answerDesc);
             yield return setRemoteOp;
 

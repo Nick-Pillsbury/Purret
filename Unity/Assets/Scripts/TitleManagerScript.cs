@@ -6,6 +6,7 @@ using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 using UnityEngine.Networking;
 using UnityEngine.SceneManagement;
+using Unity.WebRTC;
 public class TitleManagerScript : MonoBehaviour
 {
 
@@ -18,6 +19,11 @@ public class TitleManagerScript : MonoBehaviour
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
+        var capabilities = RTCRtpReceiver.GetCapabilities(TrackKind.Video);
+        foreach (var codec in capabilities.codecs)
+        {
+            Debug.Log($"Available Codec: {codec.mimeType} {codec.sdpFmtpLine}");
+        }
         
     }
 
