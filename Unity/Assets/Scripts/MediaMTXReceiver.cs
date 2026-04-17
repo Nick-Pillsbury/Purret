@@ -148,6 +148,7 @@ public class MediaMtxWhepReceiver : MonoBehaviour
             yield break;
 
         string localSdp = peer.LocalDescription.sdp;
+        Debug.Log("Local SDP:\n" + localSdp);
 
         using (var req = new UnityWebRequest(whepUrl, UnityWebRequest.kHttpVerbPOST))
         {
