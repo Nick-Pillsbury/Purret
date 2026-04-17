@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.Networking;
 using UnityEngine.UI;
 using Unity.WebRTC;
+using System.Linq;
 
 public class MediaMtxWhepReceiver : MonoBehaviour
 {
@@ -120,6 +121,16 @@ public class MediaMtxWhepReceiver : MonoBehaviour
         };
 
         peer.AddTransceiver(TrackKind.Video, transceiverInit);
+
+        var transceiver = peer.AddTransceiver(TrackKind.Video, transceiverInit);
+
+        var h264Codec = RTCRtpReceiver.GetCapabilities(TrackKind.Video).codecs
+            .Where(c => c.mimeType == "video/H264")
+            .ToArray();
+
+        transceiver.SetCodecPreferences(h264Codec);
+
+        
 
         var offerOp = peer.CreateOffer();
         yield return offerOp;
