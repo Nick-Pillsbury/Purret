@@ -33,12 +33,16 @@ def start_stream():
         "-framerate", "30",
         "-i", "/dev/video0",
         "-an",
+
         "-c:v", "libx264",
         "-preset", "ultrafast",
         "-tune", "zerolatency",
+
         "-pix_fmt", "yuv420p",
-        "-fflags", "nobuffer",
-        "-flags", "low_delay",
+        "-profile:v", "baseline",
+
+        "-g", "30",
+
         "-f", "rtsp",
         "-rtsp_transport", "tcp",
         "rtsp://127.0.0.1:8554/stream"
