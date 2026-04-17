@@ -166,7 +166,7 @@ Valid `direction` values:
 | Method | Path | Description |
 | --- | --- | --- |
 | `POST` | `/login` | Starts a session and returns a bearer token |
-| `POST` | `/logout` | Clears the active session |
+| `POST` | `/logout` | Clears the active session for the active bearer token |
 | `GET` | `/system-status` | Returns whether a session is active |
 
 ### Frontend Control Routes
@@ -174,6 +174,7 @@ Valid `direction` values:
 | Method | Path | Description |
 | --- | --- | --- |
 | `POST` | `/front/servo/move` | Moves the turret using joystick-like input |
+| `POST` | `/front/servo/reset` | Resets both servos back to center |
 | `POST` | `/front/camera/start` | Starts camera streaming |
 | `POST` | `/front/camera/stop` | Stops camera streaming |
 | `POST` | `/front/camera/record/start` | Starts recording |
@@ -241,10 +242,12 @@ curl -X POST http://127.0.0.1:8000/servo1/move \
 
 - Returns `403` if a protected route is called without the active token
 - Returns `403` on login if another session is already active
+- Returns `403` on logout if the active bearer token is missing or invalid
 - Returns `502` if the camera or servo service is unreachable or returns a bad response
 
 ## Notes
 
-- `main.py` imports `chat.py` and includes `chat_router`, so that file needs to be present for the app to start successfully.
+- `chat.py` is optional. If it is present, `main.py` will include its router automatically.
 - Camera and servo actions depend on separate services being available at their configured URLs.
+- Servo movement requests are clamped to the valid `0..180` hardware range before being forwarded.
 - FastAPI docs at `/docs` are the best source for the live schema if routes change.

@@ -10,13 +10,17 @@ from typing import Any, Dict, Literal, Optional
 from fastapi import Depends, FastAPI, HTTPException
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import BaseModel, Field
-from fastapi import FastAPI
-from chat import router as chat_router
+
+try:
+    from chat import router as chat_router
+except ImportError:
+    chat_router = None
 
 
 
 app = FastAPI(title="Purret Control API")
-app.include_router(chat_router)
+if chat_router is not None:
+    app.include_router(chat_router)
 
 # To run locally
 #
@@ -53,7 +57,7 @@ async def login(body: LoginRequest | None = None):
 
 
 @app.post("/logout")
-async def logout(_: None = None):
+async def logout(_: str = Depends(require_session)):
     global active_token
     active_token = None
     return {"ok": True}
@@ -123,6 +127,10 @@ _DIR_TO_VEC: dict[str, tuple[float, float]] = {
 global servo1angle, servo2angle
 servo1angle = 90
 servo2angle = 90
+
+
+def _normalize_servo_angle(angle: float) -> float:
+    return _clamp(float(angle), 0.0, 180.0)
 
 def _servo_service_base_url() -> str:
     return os.getenv("PURR_SERVO_SERVICE_URL", "http://127.0.0.1:8002").rstrip("/")
@@ -216,14 +224,14 @@ def _camera_service_request(method: str, path: str) -> dict[str, Any]:
 # - (record user id and only allow user) -> enforced via require_session
 # =============================================================================
 
-@app.post("front/servo/reset")
+@app.post("/front/servo/reset")
 async def servo_reset(_: str = Depends(require_session)):
     global servo1angle, servo2angle
-    servo1angle = 90.0
-    servo2angle = 90.0
+    servo1angle = _normalize_servo_angle(90.0)
+    servo2angle = _normalize_servo_angle(90.0)
     servo1 = _servo_service_request("POST", "/servo1/move", {"angle": servo1angle})
     servo2 = _servo_service_request("POST", "/servo2/move", {"angle": servo2angle})
-    return {"ok": True}
+    return {"ok": True, "servo1": servo1, "servo2": servo2}
 
 
 
@@ -245,8 +253,8 @@ async def servo_move(body: ServoMoveRequest, _: str = Depends(require_session)):
 
     x = _clamp(x, -1.0, 1.0)
     y = _clamp(y, -1.0, 1.0)
-    servo1angle += y * body.step
-    servo2angle -= x * body.step
+    servo1angle = _normalize_servo_angle(servo1angle + (y * body.step))
+    servo2angle = _normalize_servo_angle(servo2angle - (x * body.step))
 
 
     servo1 = _servo_service_request("POST", "/servo1/move", {"angle": servo1angle})
