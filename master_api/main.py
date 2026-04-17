@@ -124,6 +124,10 @@ global servo1angle, servo2angle
 servo1angle = 90
 servo2angle = 90
 
+
+def _normalize_servo_angle(angle: float) -> float:
+    return _clamp(float(angle), 0.0, 180.0)
+
 def _servo_service_base_url() -> str:
     return os.getenv("PURR_SERVO_SERVICE_URL", "http://127.0.0.1:8002").rstrip("/")
 
@@ -207,6 +211,22 @@ def _camera_service_request(method: str, path: str) -> dict[str, Any]:
         raise HTTPException(status_code=502, detail="Camera service returned non-JSON") from exc
 
 
+def _center_servos() -> dict[str, Any]:
+    global servo1angle, servo2angle
+    servo1angle = _normalize_servo_angle(90.0)
+    servo2angle = _normalize_servo_angle(90.0)
+    servo1 = _servo_service_request("POST", "/servo1/move", {"angle": servo1angle})
+    servo2 = _servo_service_request("POST", "/servo2/move", {"angle": servo2angle})
+    return {"ok": True, "servo1": servo1, "servo2": servo2}
+
+
+def _stop_active_outputs() -> dict[str, Any]:
+    recording = _camera_service_request("POST", "/recording/stop")
+    stream = _camera_service_request("POST", "/stream/stop")
+    laser = _servo_service_request("POST", "/laser/off")
+    return {"ok": True, "recording": recording, "stream": stream, "laser": laser}
+
+
 # =============================================================================
 # 1) Front to Master (HTTP)
 # - Servo Movement (Up, Down, Left, Right)
@@ -216,14 +236,16 @@ def _camera_service_request(method: str, path: str) -> dict[str, Any]:
 # - (record user id and only allow user) -> enforced via require_session
 # =============================================================================
 
-@app.post("front/servo/reset")
+@app.post("/front/servo/reset")
+@app.post("/servo/reset")
 async def servo_reset(_: str = Depends(require_session)):
-    global servo1angle, servo2angle
-    servo1angle = 90.0
-    servo2angle = 90.0
-    servo1 = _servo_service_request("POST", "/servo1/move", {"angle": servo1angle})
-    servo2 = _servo_service_request("POST", "/servo2/move", {"angle": servo2angle})
-    return {"ok": True}
+    return _center_servos()
+
+
+@app.post("/front/system/safe-stop")
+@app.post("/system/safe-stop")
+async def system_safe_stop(_: str = Depends(require_session)):
+    return _stop_active_outputs()
 
 
 
@@ -245,8 +267,8 @@ async def servo_move(body: ServoMoveRequest, _: str = Depends(require_session)):
 
     x = _clamp(x, -1.0, 1.0)
     y = _clamp(y, -1.0, 1.0)
-    servo1angle += y * body.step
-    servo2angle -= x * body.step
+    servo1angle = _normalize_servo_angle(servo1angle + (y * body.step))
+    servo2angle = _normalize_servo_angle(servo2angle - (x * body.step))
 
 
     servo1 = _servo_service_request("POST", "/servo1/move", {"angle": servo1angle})

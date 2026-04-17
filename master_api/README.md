@@ -174,6 +174,8 @@ Valid `direction` values:
 | Method | Path | Description |
 | --- | --- | --- |
 | `POST` | `/front/servo/move` | Moves the turret using joystick-like input |
+| `POST` | `/front/servo/reset` | Resets both servos back to 90 degrees |
+| `POST` | `/front/system/safe-stop` | Stops recording, stops the stream, and turns the laser off |
 | `POST` | `/front/camera/start` | Starts camera streaming |
 | `POST` | `/front/camera/stop` | Stops camera streaming |
 | `POST` | `/front/camera/record/start` | Starts recording |
@@ -199,9 +201,16 @@ Valid `direction` values:
 | Method | Path | Description |
 | --- | --- | --- |
 | `POST` | `/servo/move` | Moves both servos using joystick-like input |
+| `POST` | `/servo/reset` | Resets both servos back to 90 degrees |
 | `POST` | `/servo1/move` | Moves servo 1 to an absolute angle |
 | `POST` | `/servo2/move` | Moves servo 2 to an absolute angle |
 | `GET` | `/servo/health` | Gets servo service status |
+
+### Direct System Routes
+
+| Method | Path | Description |
+| --- | --- | --- |
+| `POST` | `/system/safe-stop` | Stops recording, stops the stream, and turns the laser off |
 
 ## Example Requests
 
