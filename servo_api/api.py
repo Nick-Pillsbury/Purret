@@ -8,6 +8,10 @@ app = FastAPI()
 class MoveRequest(BaseModel):
     angle: float
 
+class SetDefaultsRequest(BaseModel): 
+    angle1: float
+    angle2: float
+
 @app.post("/servo1/move")
 def move_servo1(request: MoveRequest):
   try:
@@ -25,7 +29,13 @@ def move_servo2(request: MoveRequest):
   except ValueError as e:
     raise HTTPException(status_code=400, detail=str(e))
 
-
+@app.post("/servos/set_angles")
+def set_defaults(request: SetDefaultsRequest):
+  try:
+    set_defaults()
+    return{"status": "ok", "default angle 1": request.angle1, "default angle 2": request.angle2}
+  except ValueError as e:
+    raise HTTPException(status_code = 400, detail=str(e))
 
 @app.post("/servos/reset")
 def reset_servos():
