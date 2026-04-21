@@ -25,7 +25,8 @@ def move_servo2(request: MoveRequest):
   except ValueError as e:
     raise HTTPException(status_code=400, detail=str(e))
 
-# note can add function to change reset values
+
+
 @app.post("/servos/reset")
 def reset_servos():
   try:
