@@ -1,6 +1,6 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-from servo_control import servo_move, reset_servos, servo1, servo2
+from servo_control import servo_move, reset_servos, set_defaults, servo1, servo2
 from servo_control import led_on, led_off, led_pwm
 
 app = FastAPI()
@@ -19,7 +19,6 @@ def move_servo1(request: MoveRequest):
     return {"status": "ok", "angle": request.angle}
   except ValueError as e:
     raise HTTPException(status_code=400, detail=str(e))
-  
   
 @app.post("/servo2/move")
 def move_servo2(request: MoveRequest):
