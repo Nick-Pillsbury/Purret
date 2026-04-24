@@ -7,6 +7,7 @@ using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 using UnityEngine.Networking;
 using UnityEngine.SceneManagement;
+using UnityEngine.InputSystem;
 
 public class LaserToggleScript : MonoBehaviour
 {
@@ -15,15 +16,20 @@ public class LaserToggleScript : MonoBehaviour
     public Sprite laserOffButtonSprite;
     public GameObject laserToggleButton;
     private bool isLaserOn = true;
+
+    public InputAction laserToggleAction;
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
+        laserToggleAction.Enable();
+        laserToggleAction.performed += ctx => ToggleLaser();
         
     }
 
     // Update is called once per frame
     void Update()
     {
+
         
     }
 

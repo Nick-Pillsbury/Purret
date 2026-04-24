@@ -386,6 +386,23 @@ MonoBehaviour:
   laserOnButtonSprite: {fileID: -7480989280063639859, guid: 0506e871c5d604ea98a56352baf50938, type: 3}
   laserOffButtonSprite: {fileID: -5815973788868159261, guid: ed6e0ce082c8e4b76950b757c2244043, type: 3}
   laserToggleButton: {fileID: 552629362}
+  laserToggleAction:
+    m_Name: Laser Toggle
+    m_Type: 0
+    m_ExpectedControlType: 
+    m_Id: 32e21afb-c29a-4901-88f9-0273b6609d2e
+    m_Processors: 
+    m_Interactions: 
+    m_SingletonActionBindings:
+    - m_Name: 
+      m_Id: 50ee61d4-2cef-4151-aeb2-19f5f30342c2
+      m_Path: <Keyboard>/space
+      m_Interactions: 
+      m_Processors: 
+      m_Groups: 
+      m_Action: Laser Toggle
+      m_Flags: 0
+    m_Flags: 0
 --- !u!114 &187110220
 MonoBehaviour:
   m_ObjectHideFlags: 0
