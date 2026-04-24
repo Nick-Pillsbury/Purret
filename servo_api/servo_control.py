@@ -61,6 +61,16 @@ def reset_servos():
   both_move(DEFAULT_ANGLE_SERVO1, DEFAULT_ANGLE_SERVO2) # reset both servos to face forward
   
 
+def set_defaults(angle1, angle2):
+  global DEFAULT_ANGLE_SERVO1, DEFAULT_ANGLE_SERVO2
+  if(angle1 > 180 or angle1 < 0):
+    raise ValueError("Invalid default angle for servo 1")
+  if(angle2 > 270 or angle2 < 0):
+    raise ValueError("Invalid default angle for servo 2")
+  DEFAULT_ANGLE_SERVO1 = angle1
+  DEFAULT_ANGLE_SERVO2 = angle2
+
+
 # ------------------------------------------LASER MODULE FUNCTIONS-----------------------------------------------------------------------
 
 def led_on():

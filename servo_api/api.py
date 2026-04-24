@@ -1,12 +1,16 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-from servo_control import servo_move, reset_servos, servo1, servo2
+from servo_control import servo_move, reset_servos, set_defaults, servo1, servo2
 from servo_control import led_on, led_off, led_pwm
 
 app = FastAPI()
   
 class MoveRequest(BaseModel):
     angle: float
+
+class SetDefaultsRequest(BaseModel): 
+    angle1: float
+    angle2: float
 
 @app.post("/servo1/move")
 def move_servo1(request: MoveRequest):
@@ -16,7 +20,6 @@ def move_servo1(request: MoveRequest):
   except ValueError as e:
     raise HTTPException(status_code=400, detail=str(e))
   
-  
 @app.post("/servo2/move")
 def move_servo2(request: MoveRequest):
   try:
@@ -25,7 +28,14 @@ def move_servo2(request: MoveRequest):
   except ValueError as e:
     raise HTTPException(status_code=400, detail=str(e))
 
-# note can add function to change reset values
+@app.post("/servos/set_angles")
+def set_defaults(request: SetDefaultsRequest):
+  try:
+    set_defaults()
+    return{"status": "ok", "default angle 1": request.angle1, "default angle 2": request.angle2}
+  except ValueError as e:
+    raise HTTPException(status_code = 400, detail=str(e))
+
 @app.post("/servos/reset")
 def reset_servos():
   try:
